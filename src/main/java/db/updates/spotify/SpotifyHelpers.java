@@ -1,5 +1,7 @@
 package db.updates.spotify;
 
+import com.mongodb.MongoWriteException;
+import com.mongodb.client.MongoCollection;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
@@ -8,6 +10,7 @@ import com.wrapper.spotify.requests.authorization.client_credentials.ClientCrede
 import com.wrapper.spotify.requests.data.albums.GetAlbumsTracksRequest;
 import com.wrapper.spotify.requests.data.artists.GetArtistsAlbumsRequest;
 import com.wrapper.spotify.requests.data.search.simplified.SearchArtistsRequest;
+import org.bson.Document;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,7 +19,91 @@ import java.util.List;
 import java.util.Scanner;
 
 public class SpotifyHelpers {
-    public static SpotifyApi createSpotifyAPI(){
+
+    /**
+     * Attempts to create and add an artist Document to a given collection.
+     * @param col The MongoCollection to add the Document to
+     * @param artistName The name of the artist to look up
+     */
+
+    public static void addArtist(MongoCollection<Document> col, String artistName) {
+
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        String id = getArtistID(spotifyApi, artistName);
+        String uri = "spotify:artist:" + id;
+        List<String> genres = getArtistGenres(spotifyApi, artistName);
+        List<Document> albums = new ArrayList<>();
+
+        Document doc = new Document("_id", artistName)
+                .append("genres", genres);
+
+        for(AlbumSimplified album: getAlbums(spotifyApi, id).getItems()){
+            albums.add(new Document("name", album.getName())
+                    .append("spotify", album.getUri())
+            );
+        }
+
+        doc.append("albums", albums)
+                .append("spotify", uri);
+
+        try{
+            col.insertOne(doc);
+        } catch (MongoWriteException mwe){
+
+        }
+    }
+
+    /**
+     * Attempts to create and add song Documents to a given collection.
+     * @param col The MongoCollection to add the Documents to
+     * @param artistName The name of the artist whose songs are being looked up
+     */
+
+    public static void addSongs(MongoCollection<Document> col, String artistName) {
+
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        String artistID = getArtistID(spotifyApi, artistName);
+        Paging<AlbumSimplified> albums = getAlbums(spotifyApi, artistID);
+
+        String id;
+        int duration;
+        String title;
+        Document doc;
+        List<String> featured;
+
+        for (AlbumSimplified album : albums.getItems()) {
+            for (TrackSimplified track : getTracks(spotifyApi, album.getId()).getItems()) {
+                title = track.getName();
+                id = track.getUri();
+                duration = track.getDurationMs() / 1000;
+                featured = getFeatured(artistName, track);
+
+                try {
+
+                    doc = new Document("_id", id).append("artist", artistName);
+
+                    if (featured.size() != 0)
+                        doc.append("featured", featured);
+
+                    doc.append("album", album.getName())
+                            .append("title", title)
+                            .append("duration", duration);
+                    col.insertOne(doc);
+
+                } catch (MongoWriteException mwe) {
+
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Creates a SpotifyApi Object with my given client info that can be used to generate requests.
+     * @return A SpotifyApi Object that can make requests
+     */
+
+    private static SpotifyApi createSpotifyAPI(){
 
         SpotifyApi spotifyApi = null;
 
@@ -44,8 +131,38 @@ public class SpotifyHelpers {
         return spotifyApi;
     }
 
-    public static List<String> getArtistGenres(SpotifyApi spotifyApi, String artistName){
-        List<String> genres = new ArrayList<String>();
+    /**
+     * Returns a Paging Object containing all of the artists albums
+     * @param spotifyApi A SpotifyAPI Object to generate requests
+     * @param artistID The ID of the artist in Spotify's URI
+     * @return A Paging Object containing all of the artists albums
+     */
+
+    private static Paging<AlbumSimplified> getAlbums(SpotifyApi spotifyApi, String artistID){
+        Paging<AlbumSimplified> albums = null;
+
+        final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistID)
+                .market(CountryCode.US)
+                .album_type("album")
+                .build();
+        try {
+            albums = albumsRequest.execute();
+        } catch (Exception e){
+            System.err.println(e.getMessage());
+        }
+
+        return albums;
+    }
+
+    /**
+     * Retrieves a List of all of an artist's musical genres
+     * @param spotifyApi A SpotifyAPI Object to generate requests
+     * @param artistName The name of the artist whose genres are being retrieved
+     * @return A List containing the artist's genres
+     */
+
+    private static List<String> getArtistGenres(SpotifyApi spotifyApi, String artistName){
+        List<String> genres = new ArrayList<>();
 
         final SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
                 .market(CountryCode.US)
@@ -64,7 +181,14 @@ public class SpotifyHelpers {
         return genres;
     }
 
-    public static String getArtistID(SpotifyApi spotifyApi, String artistName){
+    /**
+     * Returns the ID for the artist used in Spotify's URI
+     * @param spotifyApi A SpotifyAPI Object to generate requests
+     * @param artistName The name of the artist whose ID is being retrieved
+     * @return String representing the artist's ID
+     */
+
+    private static String getArtistID(SpotifyApi spotifyApi, String artistName){
         String id = "";
 
         final SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
@@ -84,44 +208,36 @@ public class SpotifyHelpers {
         return id;
     }
 
-    public static String getArtistURI(SpotifyApi spotifyApi, String artistName){
-        String uri = "";
+    /**
+     * Reads in from a file a list of artists to add to the database
+     * @param path The path to the file containing the artists' names
+     * @return A List containing the artists names
+     */
 
-        final SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
-                .market(CountryCode.US)
-                .limit(1)
-                .build();
+    public static List<String> getArtistNames(String path){
+        List<String> artists = new ArrayList<>();
 
-        try{
-            final Paging<Artist> artistPaging = artReq.execute();
-            for( Artist a: artistPaging.getItems()) {
-                uri = a.getUri();
-            }
-        } catch (Exception e){
-            System.err.println(e.getMessage());
-        }
-
-        return uri;
-    }
-
-    public static Paging<AlbumSimplified> getAlbums(SpotifyApi spotifyApi, String artistID){
-        Paging<AlbumSimplified> albums = null;
-
-        final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistID)
-                .market(CountryCode.US)
-                .album_type("album")
-                .build();
         try {
-            albums = albumsRequest.execute();
+            File file = new File(path);
+            Scanner read = new Scanner(file);
+            while (read.hasNextLine())
+                artists.add(read.nextLine());
         } catch (Exception e){
             System.err.println(e.getMessage());
         }
 
-        return albums;
+        return artists;
     }
 
-    public static List<String> getFeatured(String artistName, TrackSimplified track){
-        List<String> featured = new ArrayList<String>();
+    /**
+     * Gets a list of any other artists featured on a track.
+     * @param artistName The name of the artist whose album the track is on
+     * @param track The track
+     * @return A List containing any featured artists
+     */
+
+    private static List<String> getFeatured(String artistName, TrackSimplified track){
+        List<String> featured = new ArrayList<>();
         for(ArtistSimplified a: track.getArtists()){
             if ( !a.getName().equals(artistName) )
                 featured.add(a.getName());
@@ -129,7 +245,14 @@ public class SpotifyHelpers {
         return featured;
     }
 
-    public static Paging<TrackSimplified> getTracks(SpotifyApi spotifyApi, String albumID){
+    /**
+     * Gets a Paging of all the tracks on a given album
+     * @param spotifyApi A SpotifyAPI Object to generate requests
+     * @param albumID The ID of the album in Spotify's URI
+     * @return A Paging containing all tracks on the album
+     */
+
+    private static Paging<TrackSimplified> getTracks(SpotifyApi spotifyApi, String albumID){
         Paging<TrackSimplified> tracks = null;
 
         final GetAlbumsTracksRequest txRequest = spotifyApi.getAlbumsTracks(albumID).build();

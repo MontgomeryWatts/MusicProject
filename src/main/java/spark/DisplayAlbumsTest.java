@@ -24,13 +24,15 @@ public class DisplayAlbumsTest {
         MongoDatabase db = client.getDatabase("music");
         MongoCollection<Document> artists = db.getCollection("artists");
 
-        String artistName = "xxxtentacion";
+        String artistName = "kanye west";
         Document artistDoc  = FindArtistCaseInsensitive.findArtist(artists, artistName);
         List<Document> albums = (List<Document>)artistDoc.get("albums");
 
         //If the artist name was not formatted correctly in the initial query,
         //this will ensure it is displayed correctly
         String artist = artistDoc.getString("_id");
+
+        Spark.setPort(80);
 
         get(new Route("/"){
             @Override
