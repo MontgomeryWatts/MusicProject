@@ -17,7 +17,7 @@ public class AddArtists {
         SpotifyApi spotifyApi = createSpotifyAPI();
         String id = getArtistID(spotifyApi, artistName);
         List<String> genres = getArtistGenres(spotifyApi, artistName);
-        List<Document> albums = new ArrayList<Document>();
+        List<Document> albums = new ArrayList<>();
 
         Document doc = new Document("_id", artistName)
                 .append("genres", genres);
@@ -25,7 +25,6 @@ public class AddArtists {
         for(AlbumSimplified album: getAlbums(spotifyApi, id).getItems()){
             albums.add(new Document("name", album.getName())
                     .append("spotify", album.getUri())
-                    //.append("year", album.g)
             );
         }
 
