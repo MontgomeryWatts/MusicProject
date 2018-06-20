@@ -14,36 +14,50 @@ import java.util.List;
 import java.util.Map;
 
 import static spark.Spark.get;
+import static spark.Spark.post;
 
-public class DisplayAlbumsTest {
+public class RetrieveAlbums {
     public static void main(String[] args) {
         Configuration config = new Configuration();
-        config.setClassForTemplateLoading(SparkTests.class, "/");
+        config.setClassForTemplateLoading(RetrieveAlbums.class, "/");
 
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
         MongoCollection<Document> artists = db.getCollection("artists");
 
-        String artistName = "kanye west";
-        Document artistDoc  = FindArtistCaseInsensitive.findArtist(artists, artistName);
-        List<Document> albums = (List<Document>)artistDoc.get("albums");
-
-        //If the artist name was not formatted correctly in the initial query,
-        //this will ensure it is displayed correctly
-        String artist = artistDoc.getString("_id");
-
         Spark.setPort(80);
 
-        get(new Route("/"){
+        post(new Route("/search"){
             @Override
             public Object handle(Request request, Response response) {
                 StringWriter writer = new StringWriter();
 
+                String artistName = request.queryParams("input");
+                Document artistDoc  = FindArtistCaseInsensitive.findArtist(artists, artistName);
+                List<Document> albums = (List<Document>)artistDoc.get("albums");
+                String artist = artistDoc.getString("_id");
+
                 try{
-                    Template t = config.getTemplate("displayAlbums.ftl");
+                    Template t = config.getTemplate("retrieveAlbums.ftl");
                     Map<String, Object> map = new HashMap<>();
                     map.put("artist", artist);
                     map.put("albums", albums);
+                    t.process(map, writer);
+                } catch (Exception e){
+                    System.err.println(e.getMessage());
+                }
+
+                return writer;
+            }
+        });
+
+        get(new Route("/search"){
+            @Override
+            public Object handle(Request request, Response response) {
+                StringWriter writer = new StringWriter();
+                try{
+                    Template t = config.getTemplate("retrieveAlbums.ftl");
+                    Map<String, Object> map = new HashMap<>();
                     t.process(map, writer);
                 } catch (Exception e){
                     System.err.println(e.getMessage());

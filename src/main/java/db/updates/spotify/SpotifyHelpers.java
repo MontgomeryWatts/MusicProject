@@ -103,7 +103,7 @@ public class SpotifyHelpers {
      * @return A SpotifyApi Object that can make requests
      */
 
-    private static SpotifyApi createSpotifyAPI(){
+    public static SpotifyApi createSpotifyAPI(){
 
         SpotifyApi spotifyApi = null;
 

@@ -12,7 +12,11 @@ public class FindArtistCaseInsensitive {
     public static Document findArtist(MongoCollection<Document> col, String artistName){
         Document doc;
 
-        Document filter = new Document("$text", new Document("$search", artistName));
+        //Backslashes cause MongoDB to match against the entire phrase as opposed to individual words
+        //Needed for artists that may contain the same words in their names e.g. Danger Doom and MF DOOM
+        String searchPhrase = "\"" + artistName + "\"";
+
+        Document filter = new Document("$text", new Document("$search", searchPhrase));
         doc = col.find(filter).first();
 
         return doc;
