@@ -34,17 +34,24 @@ public class RetrieveAlbums {
 
                 String artistName = request.queryParams("input");
                 Document artistDoc  = FindArtistCaseInsensitive.findArtist(artists, artistName);
-                List<Document> albums = (List<Document>)artistDoc.get("albums");
-                String artist = artistDoc.getString("_id");
 
-                try{
-                    Template t = config.getTemplate("retrieveAlbums.ftl");
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("artist", artist);
-                    map.put("albums", albums);
-                    t.process(map, writer);
-                } catch (Exception e){
-                    System.err.println(e.getMessage());
+                //Prevents a 500 error/NPE from being thrown if the artist is not in the database
+                if(artistDoc == null)
+                    response.redirect("/search");
+
+                else {
+                    List<Document> albums = (List<Document>) artistDoc.get("albums");
+                    String artist = artistDoc.getString("_id");
+
+                    try {
+                        Template t = config.getTemplate("retrieveAlbums.ftl");
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("artist", artist);
+                        map.put("albums", albums);
+                        t.process(map, writer);
+                    } catch (Exception e) {
+                        System.err.println(e.getMessage());
+                    }
                 }
 
                 return writer;
@@ -66,5 +73,6 @@ public class RetrieveAlbums {
                 return writer;
             }
         });
+
     }
 }

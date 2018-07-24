@@ -22,7 +22,7 @@ public class GenerateRandomPlaylist {
         List<Document> playlist = new ArrayList<Document>();
         List<Document> possibleSongs;
 
-        while ( (possibleSongs = songs.find(new Document("duration", new Document("$lte", duration))).into(new ArrayList<Document>())).size() != 0  ){
+        while ( (possibleSongs = songs.find(new Document("duration", new Document("$lte", duration))).into(new ArrayList<>())).size() != 0  ){
             Document doc = possibleSongs.remove(Math.abs(new Random().nextInt()) % possibleSongs.size());
             playlist.add(doc);
             duration -= doc.getInteger("duration");

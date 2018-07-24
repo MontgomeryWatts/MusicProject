@@ -13,6 +13,7 @@ import com.wrapper.spotify.requests.data.search.simplified.SearchArtistsRequest;
 import org.bson.Document;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +27,7 @@ public class SpotifyHelpers {
      * @param artistName The name of the artist to look up
      */
 
-    public static void addArtist(MongoCollection<Document> col, String artistName) {
+    static void addArtist(MongoCollection<Document> col, String artistName) {
 
         SpotifyApi spotifyApi = createSpotifyAPI();
         String id = getArtistID(spotifyApi, artistName);
@@ -59,7 +60,7 @@ public class SpotifyHelpers {
      * @param artistName The name of the artist whose songs are being looked up
      */
 
-    public static void addSongs(MongoCollection<Document> col, String artistName) {
+    static void addSongs(MongoCollection<Document> col, String artistName) {
 
         SpotifyApi spotifyApi = createSpotifyAPI();
         String artistID = getArtistID(spotifyApi, artistName);
@@ -105,15 +106,23 @@ public class SpotifyHelpers {
 
     public static SpotifyApi createSpotifyAPI(){
 
+        return createSpotifyAPI(null);
+    }
+
+    public static SpotifyApi createSpotifyAPI(URI uri){
+
         SpotifyApi spotifyApi = null;
 
         try {
             File file = new File("src/main/resources/clientInfo.txt");
             Scanner scanner = new Scanner(file);
-            spotifyApi = SpotifyApi.builder()
+            SpotifyApi.Builder builder = SpotifyApi.builder()
                     .setClientId(scanner.nextLine())
-                    .setClientSecret(scanner.nextLine())
-                    .build();
+                    .setClientSecret(scanner.nextLine());
+            if(uri != null)
+                    builder.setRedirectUri(uri);
+
+            spotifyApi = builder.build();
         } catch (Exception e){
             System.err.println(e.getMessage());
         }

@@ -18,7 +18,7 @@ import static spark.Spark.get;
 public class DisplayAlbums {
     public static void main(String[] args) {
         Configuration config = new Configuration();
-        config.setClassForTemplateLoading(SparkTests.class, "/");
+        config.setClassForTemplateLoading(DisplayAlbums.class, "/");
 
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
