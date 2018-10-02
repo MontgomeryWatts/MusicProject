@@ -3,7 +3,6 @@ package spark;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import db.queries.FindArtistCaseInsensitive;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.bson.Document;
@@ -13,9 +12,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static db.queries.DatabaseQueries.*;
 import static spark.Spark.get;
 import static spark.Spark.post;
 
+@SuppressWarnings("unchecked")
 public class RetrieveAlbums {
     public static void main(String[] args) {
         Configuration config = new Configuration();
@@ -33,7 +34,7 @@ public class RetrieveAlbums {
                 StringWriter writer = new StringWriter();
 
                 String artistName = request.queryParams("input");
-                Document artistDoc  = FindArtistCaseInsensitive.findArtist(artists, artistName);
+                Document artistDoc  = getArtistDoc(artists, artistName);
 
                 //Prevents a 500 error/NPE from being thrown if the artist is not in the database
                 if(artistDoc == null)

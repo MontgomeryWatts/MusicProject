@@ -3,7 +3,6 @@ package spark;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import db.queries.FindArtistCaseInsensitive;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import org.bson.Document;
@@ -13,8 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static db.queries.DatabaseQueries.*;
 import static spark.Spark.get;
 
+@SuppressWarnings("unchecked")
 public class DisplayAlbums {
     public static void main(String[] args) {
         Configuration config = new Configuration();
@@ -25,7 +26,7 @@ public class DisplayAlbums {
         MongoCollection<Document> artists = db.getCollection("artists");
 
         String artistName = "kanye west";
-        Document artistDoc  = FindArtistCaseInsensitive.findArtist(artists, artistName);
+        Document artistDoc  = getArtistDoc(artists, artistName);
         List<Document> albums = (List<Document>)artistDoc.get("albums");
 
         //If the artist name was not formatted correctly in the initial query,

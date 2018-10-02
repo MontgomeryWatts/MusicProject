@@ -16,8 +16,8 @@ import static com.mongodb.client.model.Filters.*;
  * Currently intended to be run once after all artists and songs have been added to the database.
  */
 
+@SuppressWarnings("unchecked")
 public class AddCollabs {
-    @SuppressWarnings("unchecked")
     public static void main(String[] args) {
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
