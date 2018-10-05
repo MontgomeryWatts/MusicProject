@@ -86,22 +86,26 @@ public class SpotifyQueries {
                 duration = track.getDurationMs() / 1000;
                 featured = getFeatured(artistName, track);
 
-                try {
+                Document songDoc = songsCollection.find( eq("_id", id) ).first();
 
-                    doc = new Document("_id", id).append("artist", artistName);
+                //This check should prevent any potential MongoWriteExceptions
+                if(songDoc == null) {
+                    try {
 
-                    if (featured.size() != 0)
-                        doc.append("featured", featured);
+                        doc = new Document("_id", id).append("artist", artistName);
 
-                    doc.append("album", album.getName())
-                            .append("title", title)
-                            .append("duration", duration);
-                    songsCollection.insertOne(doc);
+                        if (featured.size() != 0)
+                            doc.append("featured", featured);
 
-                } catch (MongoWriteException mwe) {
-                    mwe.printStackTrace();
+                        doc.append("album", album.getName())
+                                .append("title", title)
+                                .append("duration", duration);
+                        songsCollection.insertOne(doc);
+
+                    } catch (MongoWriteException mwe) {
+                        mwe.printStackTrace();
+                    }
                 }
-
             }
         }
     }
