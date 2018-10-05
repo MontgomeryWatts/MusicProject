@@ -12,7 +12,7 @@ import com.wrapper.spotify.model_objects.specification.Playlist;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import com.wrapper.spotify.requests.data.playlists.AddTracksToPlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.CreatePlaylistRequest;
-import db.updates.spotify.SpotifyHelpers;
+import db.updates.spotify.SpotifyQueries;
 import org.bson.Document;
 
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class CreatePlaylist {
 
         final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost");
         String code = "AQCja4ud9NF5RlByOEZnozXuc2NwQ0GWjx_BREBXXPX8zAaxRnzq1BP7isB1bQG812tqVsXmKL_1-eVKYWO81RoQTa2csffPohr1ZrH3fn0fOP2aHg-xO1PgLN4XqtP-oTY0dR80T4gljJF4bnGimLQYg_QD0aO5u9vofByMfifkNvM2qwtKDwxWdvpgN69BtjQAZdH5IgrDqiCU_jM";
-        SpotifyApi spotifyApi = SpotifyHelpers.createSpotifyAPI(redirectUri);
+        SpotifyApi spotifyApi = SpotifyQueries.createSpotifyAPI(redirectUri);
 
 
         final AuthorizationCodeRequest authorizationCodeRequest = spotifyApi.authorizationCode(code)
@@ -78,7 +78,7 @@ public class CreatePlaylist {
             trackIDs.add(doc.getString("_id"));
         }
 
-        final String[] uris = trackIDs.toArray(new String[trackIDs.size()]);
+        final String[] uris = trackIDs.toArray(new String[0]);
 
         final AddTracksToPlaylistRequest addTracksToPlaylistRequest = spotifyApi
                 .addTracksToPlaylist(userID, playlistID, uris)

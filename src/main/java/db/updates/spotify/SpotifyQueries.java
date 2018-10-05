@@ -2,6 +2,7 @@ package db.updates.spotify;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
@@ -19,15 +20,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-public class SpotifyHelpers {
+import static com.mongodb.client.model.Filters.*;
+
+public class SpotifyQueries {
 
     /**
      * Attempts to create and add an artist Document to a given collection.
-     * @param col The MongoCollection to add the Document to
+     * @param artistCollection The MongoCollection to add the Document to
      * @param artistName The name of the artist to look up
      */
 
-    static void addArtist(MongoCollection<Document> col, String artistName) {
+    static void addArtist(MongoCollection<Document> artistCollection, String artistName) {
+        //Don't bother doing anything if the document already exists
+        Document artistDoc = artistCollection.find( eq("_id", artistName) ).first();
+        if(artistDoc != null)
+            return;
 
         SpotifyApi spotifyApi = createSpotifyAPI();
         String id = getArtistID(spotifyApi, artistName);
@@ -48,19 +55,19 @@ public class SpotifyHelpers {
                 .append("spotify", uri);
 
         try{
-            col.insertOne(doc);
+            artistCollection.insertOne(doc);
         } catch (MongoWriteException mwe){
-
+            mwe.printStackTrace();
         }
     }
 
     /**
      * Attempts to create and add song Documents to a given collection.
-     * @param col The MongoCollection to add the Documents to
+     * @param songsCollection The MongoCollection to add the Documents to
      * @param artistName The name of the artist whose songs are being looked up
      */
 
-    static void addSongs(MongoCollection<Document> col, String artistName) {
+    static void addSongs(MongoCollection<Document> songsCollection, String artistName) {
 
         SpotifyApi spotifyApi = createSpotifyAPI();
         String artistID = getArtistID(spotifyApi, artistName);
@@ -89,10 +96,10 @@ public class SpotifyHelpers {
                     doc.append("album", album.getName())
                             .append("title", title)
                             .append("duration", duration);
-                    col.insertOne(doc);
+                    songsCollection.insertOne(doc);
 
                 } catch (MongoWriteException mwe) {
-
+                    mwe.printStackTrace();
                 }
 
             }
@@ -104,7 +111,7 @@ public class SpotifyHelpers {
      * @return A SpotifyApi Object that can make requests
      */
 
-    public static SpotifyApi createSpotifyAPI(){
+    private static SpotifyApi createSpotifyAPI(){
 
         return createSpotifyAPI(null);
     }
@@ -217,26 +224,6 @@ public class SpotifyHelpers {
         return id;
     }
 
-    /**
-     * Reads in from a file a list of artists to add to the database
-     * @param path The path to the file containing the artists' names
-     * @return A List containing the artists names
-     */
-
-    public static List<String> getArtistNames(String path){
-        List<String> artists = new ArrayList<>();
-
-        try {
-            File file = new File(path);
-            Scanner read = new Scanner(file);
-            while (read.hasNextLine())
-                artists.add(read.nextLine());
-        } catch (Exception e){
-            System.err.println(e.getMessage());
-        }
-
-        return artists;
-    }
 
     /**
      * Gets a list of any other artists featured on a track.
