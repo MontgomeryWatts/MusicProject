@@ -1,4 +1,4 @@
-package db.updates.spotify;
+package db.updates.mongo;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoWriteException;

@@ -38,7 +38,6 @@ public class CreatePlaylist {
         artistNames.addAll( getArtistCollabs(collabCollection, artistName) );
 
         for (String name: artistNames){
-            System.out.println(name);
             songs.addAll( getArtistSongs(songsCollection, name) );
         }
 

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 import static com.mongodb.client.model.Filters.eq;
+import static db.updates.spotify.SpotifyQueries.*;
 
 @SuppressWarnings("unchecked")
 public class AddReferencedArtists {
@@ -30,8 +31,8 @@ public class AddReferencedArtists {
             Document artistDoc = artistsCollection.find( eq("_id", name) ).first();
             if(artistDoc == null){
                 System.out.println("Attempting to create documents for: " + name);
-                SpotifyQueries.addArtist(artistsCollection, name);
-                SpotifyQueries.addSongs(songsCollection, name);
+                addArtist(artistsCollection, name);
+                addSongs(songsCollection, name);
             }
         }
     }

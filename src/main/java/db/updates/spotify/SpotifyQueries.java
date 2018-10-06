@@ -2,9 +2,9 @@ package db.updates.spotify;
 
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Filters;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.exceptions.detailed.ServiceUnavailableException;
 import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
@@ -39,6 +39,10 @@ public class SpotifyQueries {
 
         SpotifyApi spotifyApi = createSpotifyAPI();
         String id = getArtistID(spotifyApi, artistName);
+
+        if(id == null)
+            return;
+
         String uri = "spotify:artist:" + id;
         List<String> genres = getArtistGenres(spotifyApi, artistName);
         List<Document> albums = new ArrayList<>();
@@ -72,6 +76,9 @@ public class SpotifyQueries {
 
         SpotifyApi spotifyApi = createSpotifyAPI();
         String artistID = getArtistID(spotifyApi, artistName);
+        if(artistID == null)
+            return;
+
         Paging<AlbumSimplified> albums = getAlbums(spotifyApi, artistID);
 
         String id;
@@ -81,6 +88,10 @@ public class SpotifyQueries {
         List<String> featured;
 
         for (AlbumSimplified album : albums.getItems()) {
+
+            if(album == null)
+                continue;
+
             for (TrackSimplified track : getTracks(spotifyApi, album.getId()).getItems()) {
                 title = track.getName();
                 id = track.getUri();
@@ -160,7 +171,7 @@ public class SpotifyQueries {
      */
 
     private static Paging<AlbumSimplified> getAlbums(SpotifyApi spotifyApi, String artistID){
-        Paging<AlbumSimplified> albums = null;
+        Paging<AlbumSimplified> albums = new Paging.Builder<AlbumSimplified>().build();
 
         final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistID)
                 .market(CountryCode.US)
@@ -179,6 +190,14 @@ public class SpotifyQueries {
             }
             return getAlbums(spotifyApi, artistID);
 
+        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
+            try{
+                Thread.sleep(5000);
+            } catch (InterruptedException ie)
+            {
+                ie.printStackTrace();
+            }
+            return getAlbums(spotifyApi, artistID);
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -217,6 +236,14 @@ public class SpotifyQueries {
             }
             return getArtistGenres(spotifyApi, artistName);
 
+        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
+            try{
+                Thread.sleep(5000);
+            } catch (InterruptedException ie)
+            {
+                ie.printStackTrace();
+            }
+            return getArtistGenres(spotifyApi, artistName);
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -232,7 +259,7 @@ public class SpotifyQueries {
      */
 
     private static String getArtistID(SpotifyApi spotifyApi, String artistName){
-        String id = "";
+        String id = null;
 
         final SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
                 .market(CountryCode.US)
@@ -255,7 +282,16 @@ public class SpotifyQueries {
             }
             return getArtistID(spotifyApi, artistName);
 
-        } catch (Exception e){
+        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
+            try{
+                Thread.sleep(5000);
+            } catch (InterruptedException ie)
+            {
+                ie.printStackTrace();
+            }
+            return getArtistID(spotifyApi, artistName);
+        }
+        catch (Exception e){
             e.printStackTrace();
         }
         return id;
@@ -286,7 +322,7 @@ public class SpotifyQueries {
      */
 
     private static Paging<TrackSimplified> getTracks(SpotifyApi spotifyApi, String albumID){
-        Paging<TrackSimplified> tracks = null;
+        Paging<TrackSimplified> tracks = new Paging.Builder<TrackSimplified>().build();
 
         final GetAlbumsTracksRequest txRequest = spotifyApi.getAlbumsTracks(albumID).build();
 
@@ -303,7 +339,15 @@ public class SpotifyQueries {
             }
             return getTracks(spotifyApi, albumID);
 
-        } catch (Exception e){
+        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
+            try{
+                Thread.sleep(5000);
+            } catch (InterruptedException ie)
+            {
+                ie.printStackTrace();
+            }
+            return getTracks(spotifyApi, albumID);
+        }  catch (Exception e){
             e.printStackTrace();
         }
 
