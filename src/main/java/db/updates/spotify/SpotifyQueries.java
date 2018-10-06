@@ -5,6 +5,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
@@ -167,8 +168,19 @@ public class SpotifyQueries {
                 .build();
         try {
             albums = albumsRequest.execute();
+        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
+
+            int wait = tmre.getRetryAfter() * 1000;
+            System.out.println("TooManyRequestsException in getAlbums, waiting for " + wait + " milliseconds");
+            try{
+                Thread.sleep(wait);
+            } catch (InterruptedException ie){
+                ie.printStackTrace();
+            }
+            return getAlbums(spotifyApi, artistID);
+
         } catch (Exception e){
-            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
 
         return albums;
@@ -194,8 +206,19 @@ public class SpotifyQueries {
             for( Artist a: artistPaging.getItems()) {
                 genres = Arrays.asList(a.getGenres());
             }
+        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
+
+            int wait = tmre.getRetryAfter() * 1000;
+            System.out.println("TooManyRequestsException in getArtistGenres, waiting for " + wait + " milliseconds");
+            try{
+                Thread.sleep(wait);
+            } catch (InterruptedException ie){
+                ie.printStackTrace();
+            }
+            return getArtistGenres(spotifyApi, artistName);
+
         } catch (Exception e){
-            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
 
         return genres;
@@ -221,10 +244,20 @@ public class SpotifyQueries {
             for( Artist a: artistPaging.getItems()) {
                 id = a.getId();
             }
-        } catch (Exception e){
-            System.err.println(e.getMessage());
-        }
+        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
 
+            int wait = tmre.getRetryAfter() * 1000;
+            System.out.println("TooManyRequestsException in getArtistID, waiting for " + wait + " milliseconds");
+            try{
+                Thread.sleep(wait);
+            } catch (InterruptedException ie){
+                ie.printStackTrace();
+            }
+            return getArtistID(spotifyApi, artistName);
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         return id;
     }
 
@@ -259,8 +292,19 @@ public class SpotifyQueries {
 
         try{
             tracks = txRequest.execute();
+        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
+
+            int wait = tmre.getRetryAfter() * 1000;
+            System.out.println("TooManyRequestsException in getTracks, waiting for " + wait + " milliseconds");
+            try{
+                Thread.sleep(wait);
+            } catch (InterruptedException ie){
+                ie.printStackTrace();
+            }
+            return getTracks(spotifyApi, albumID);
+
         } catch (Exception e){
-            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return tracks;
