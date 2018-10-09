@@ -18,21 +18,19 @@ import org.bson.Document;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static com.mongodb.client.model.Filters.eq;
 
 public class CreatePlaylist {
     public static void main(String[] args) {
 
-        MongoClient client = new MongoClient();
-        MongoDatabase db = client.getDatabase("music");
-        MongoCollection<Document> songs = db.getCollection("songs");
-
         String userID = "loco__motives";
-        String playlistName = "All Isaiah Rashad Songs";
+        String playlistName = "Test2";
 
         final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost");
-        String code = "AQCja4ud9NF5RlByOEZnozXuc2NwQ0GWjx_BREBXXPX8zAaxRnzq1BP7isB1bQG812tqVsXmKL_1-eVKYWO81RoQTa2csffPohr1ZrH3fn0fOP2aHg-xO1PgLN4XqtP-oTY0dR80T4gljJF4bnGimLQYg_QD0aO5u9vofByMfifkNvM2qwtKDwxWdvpgN69BtjQAZdH5IgrDqiCU_jM";
+        String code = "AQD9JHbubO3KA81QVk0OjUAHVXjvpCnWxtbEg7Nv_31W5de9jlaqBBt0vGO7tg4l3v8AJ4RbSXwtGyiKTuFtJ0t-iJrJEx-zcs1Xfi8CCylzS3Sk8f09j3COZ6atot0bnppux1KvXW6ROpwuOzwTF11L0uAOELDWL701dKMjk1eiOmGyyeuUAj34VdwEJtSWSNyjcc46lRaO-TEpb96uIQ";
         SpotifyApi spotifyApi = SpotifyQueries.createSpotifyAPI(redirectUri);
 
 
@@ -57,7 +55,6 @@ public class CreatePlaylist {
                 .collaborative(false)
                 .public_(true)
                 .name(playlistName)
-                .description("That I have")
                 .build();
 
         String playlistID = null;
@@ -72,11 +69,9 @@ public class CreatePlaylist {
         }
 
 
+
         //Add tracks to playlist
-        ArrayList<String> trackIDs = new ArrayList<>();
-        for (Document doc: songs.find(eq("artist", "Isaiah Rashad"))){
-            trackIDs.add(doc.getString("_id"));
-        }
+        Set<String> trackIDs = db.queries.CreatePlaylist.getTrackUris("Isaiah Rashad", 3600, null);
 
         final String[] uris = trackIDs.toArray(new String[0]);
 

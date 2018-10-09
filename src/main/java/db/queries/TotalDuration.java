@@ -7,6 +7,9 @@ import org.bson.Document;
 
 import java.text.DecimalFormat;
 
+/**
+ * Prints how long it would take to listen to every song currently in the database
+ */
 public class TotalDuration {
     public static void main(String[] args) {
 
@@ -27,7 +30,7 @@ public class TotalDuration {
 
     public static void printFormattedTime(long seconds){
         DecimalFormat df = new DecimalFormat("00");
-        System.out.println( df.format(seconds/3600 / 24) + ":" +
+        System.out.println( seconds/3600 / 24 + ":" +
                 df.format(seconds/3600 % 24) + ":" +
                 df.format(seconds/60 % 60) + ":" +
                 df.format(seconds%60) );
