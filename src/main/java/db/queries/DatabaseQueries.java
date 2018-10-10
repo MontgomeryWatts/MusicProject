@@ -66,6 +66,10 @@ public class DatabaseQueries {
         return songsCollection.aggregate(Collections.singletonList(Aggregates.sample(SONGS_TO_RETURN))).into(new HashSet<>());
     }
 
+    public static Set<Document> getSongsByFeaturedArtist(MongoCollection<Document> songsCollection, String artistName){
+        return songsCollection.find( eq("featured", artistName) ).into( new HashSet<>());
+    }
+
     /**
      * Retreives all song Documents in the database from a given artist
      * @param songsCollection A MongoCollection containing the song Documents
@@ -84,6 +88,7 @@ public class DatabaseQueries {
 
     public static Set<Document> getSongsByGenre(MongoCollection<Document> artistCollection, MongoCollection<Document> songsCollection, Set<String> genres){
         Set<Document> songs = new HashSet<>();
+        //Second set is used to keep track of which artists to add so there aren't duplicate queries
         Set<String> artistNames = new HashSet<>();
         for (String genre: genres){
 

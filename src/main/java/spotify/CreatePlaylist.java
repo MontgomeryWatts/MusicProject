@@ -27,10 +27,10 @@ public class CreatePlaylist {
     public static void main(String[] args) {
 
         String userID = "loco__motives";
-        String playlistName = "Test2";
+        String playlistName = "Playlist For Lee";
 
         final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost");
-        String code = "AQD9JHbubO3KA81QVk0OjUAHVXjvpCnWxtbEg7Nv_31W5de9jlaqBBt0vGO7tg4l3v8AJ4RbSXwtGyiKTuFtJ0t-iJrJEx-zcs1Xfi8CCylzS3Sk8f09j3COZ6atot0bnppux1KvXW6ROpwuOzwTF11L0uAOELDWL701dKMjk1eiOmGyyeuUAj34VdwEJtSWSNyjcc46lRaO-TEpb96uIQ";
+        String code = "AQDknLbQeyEIQawtAw4QxKhaBa0TNtmRA8CTbCe0S5zFa1EHOnm7ROxf7ZDL11dnJRbFCDzF5f7BZNQnVtIinFXlt4OT746S5PSG2xmw5TA9qAQ-0uh8wxdhYDpSoml7gnZdSkZApAj4nT2HmqFAl8Jj5_4fyFY7jCDO4o7yrlCyg50SVcg6PAcyh668zBiQAwa9jnvVIIBmK0VTUA6nrQ";
         SpotifyApi spotifyApi = SpotifyQueries.createSpotifyAPI(redirectUri);
 
 
@@ -71,7 +71,7 @@ public class CreatePlaylist {
 
 
         //Add tracks to playlist
-        Set<String> trackIDs = db.queries.CreatePlaylist.getTrackUris("Isaiah Rashad", 3600, null);
+        Set<String> trackIDs = db.queries.CreatePlaylist.getTrackUris("Lil Wayne", 7200, null);
 
         final String[] uris = trackIDs.toArray(new String[0]);
 

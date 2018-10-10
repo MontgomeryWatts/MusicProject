@@ -3,6 +3,7 @@ package spotify;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
+import db.updates.spotify.SpotifyQueries;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import spark.*;
@@ -20,19 +21,12 @@ public class GetAccessToken {
         Configuration config = new Configuration();
         config.setClassForTemplateLoading(DisplayAlbums.class, "/");
 
-        final String clientId = "9e3cd263a287408b9346b2a06a56cbcb";
-        final String clientSecret = "15fbb67cda8c4faf8e75061c26d2ef4a";
         final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost");
-        final String code = "";
 
-        final SpotifyApi spotifyApi = new SpotifyApi.Builder()
-                .setClientId(clientId)
-                .setClientSecret(clientSecret)
-                .setRedirectUri(redirectUri)
-                .build();
+
+        final SpotifyApi spotifyApi = SpotifyQueries.createSpotifyAPI(redirectUri);
 
         final AuthorizationCodeUriRequest authorizationCodeUriRequest = spotifyApi.authorizationCodeUri()
-                //.state("x4xkmn9pu3j6ukrs8n")
                 .scope("playlist-modify-public")
                 .show_dialog(true)
                 .build();

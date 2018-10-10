@@ -23,21 +23,13 @@ public class CreatePlaylist {
         MongoDatabase db = client.getDatabase("music");
         MongoCollection<Document> artistCollection = db.getCollection("artists");
         MongoCollection<Document> songsCollection = db.getCollection("songs");
-        MongoCollection<Document> collabCollection = db.getCollection("collabs");
 
         Set<Document> songs  = new HashSet<>();
 
         if(artist != null){
-
-            songs.addAll(getSongsByArtist(songsCollection, artist));
-
-            for(String name: getArtistCollabNames(collabCollection, artist)){
-                songs.addAll( getSongsByArtist(songsCollection, name) );
-            }
-
             Set<String> artistGenres = getArtistGenres(artistCollection, artist);
-
             songs.addAll(getSongsByGenre(artistCollection, songsCollection, artistGenres));
+            songs.addAll(getSongsByFeaturedArtist(songsCollection, artist));
         }
 
         if(genres != null){
