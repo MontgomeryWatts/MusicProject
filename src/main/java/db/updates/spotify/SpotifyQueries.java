@@ -43,21 +43,12 @@ public class SpotifyQueries {
         if(id == null)
             return;
 
-        String uri = "spotify:artist:" + id;
+        String spotifyUri = "spotify:artist:" + id;
         List<String> genres = getArtistGenres(spotifyApi, artistName);
-        List<Document> albums = new ArrayList<>();
 
         Document doc = new Document("_id", artistName)
-                .append("genres", genres);
-
-        for(AlbumSimplified album: getAlbums(spotifyApi, id).getItems()){
-            albums.add(new Document("name", album.getName())
-                    .append("spotify", album.getUri())
-            );
-        }
-
-        doc.append("albums", albums)
-                .append("spotify", uri);
+                .append("genres", genres)
+                .append("spotify", spotifyUri);
 
         try{
             artistCollection.insertOne(doc);
@@ -104,14 +95,15 @@ public class SpotifyQueries {
                 if(songDoc == null) {
                     try {
 
-                        doc = new Document("_id", id).append("artist", artistName);
+                        doc = new Document("_id", id)
+                                .append("artist", artistName)
+                                .append("album", album.getName())
+                                .append("title", title)
+                                .append("duration", duration);
 
                         if (featured.size() != 0)
                             doc.append("featured", featured);
 
-                        doc.append("album", album.getName())
-                                .append("title", title)
-                                .append("duration", duration);
                         songsCollection.insertOne(doc);
 
                     } catch (MongoWriteException mwe) {
@@ -263,7 +255,6 @@ public class SpotifyQueries {
 
         final SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
                 .market(CountryCode.US)
-                .limit(1)
                 .build();
 
         try{

@@ -11,6 +11,11 @@ import java.util.HashSet;
 import static com.mongodb.client.model.Filters.eq;
 import static db.updates.spotify.SpotifyQueries.*;
 
+/**
+ * Goes through all collab documents retrieving artist names from the collabs set. Any artist from this set that does
+ * not have a document in the artistsCollection is added to both the songs and artists collections.
+ */
+
 @SuppressWarnings("unchecked")
 public class AddReferencedArtists {
     public static void main(String[] args) {
