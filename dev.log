@@ -1,0 +1,61 @@
+10/9/2018 5:51 EST
+Git revision number: c616dd76d1a2275a131716bbb0932e72044c9939
+
+Thoughts on how the SpotifyDB project is going, what I'm learning, what I need to learn:
+    All of the queries I was running that were fine when the database only had to go a couple thousand documents are very
+    slow now that I have hundreds of thousands of documents in the database. Is this because there is simply too many
+    documents being returned? Instead of finding every single artist with a given genre or given collaborating artist,
+    find a sample of them? MongoDB aggregation is a (self-reported) powerful tool when dealing with large amounts of data.
+    The aggregation I currently have in CreatePlaylist for making parameterless playlists (getSongsByRandom) seemed fast.
+
+    I'm going to try right now to make a speed comparison when providing only an artist to getTrackUris when using
+    aggregation and when using the current method.  This is also a good opportunity to get used to creating and merging
+    git branches.
+
+    Current state of the database as of this experiment:
+        Created two databases called music10-9-18 and musicBackup10-9-18
+        For musicBackup10-9-18:
+            artists count is 40.
+            collabs count is 480.
+            songs count is 2,908.
+        For music10-9-18:
+            artists count is 3,479.
+            collabs count is 3,997.
+            songs count is 202,808.
+        music10-9-18 was obtained by running AddReferencedArtists, UpdateSongs, and AddReferenced artists while
+        in the state musicBackup10-9-18.
+
+    Running db.queries.stats.CreatePlaylist takes between 38 and 39 seconds (Only IntelliJ, mongod, and mongo running).
+    The value of DEFAULT_DURATION is currently 3600 (One hour), and the value of artist is "Isaiah Rashad".
+
+    To proceed I need to figure out how to create an aggregation in mongoDB's java driver that gives me similar data.
+    I think it might be better to get a sample of the data as opposed to literally every matching document for a couple
+    reasons.
+        1. Assuming the aggregation engine's randomness is sufficient, it might be better for the intentions of this
+        project to introduce more elements of chaos in order to have a greater variance between playlists.
+            a. Running  db.queries.stats.CreatePlaylist multiple times has confirmed that the copying I do when taking
+            the Set of songs to an ArrayList 'orders' the set of songs. Ordered in the sense that the same songs are in
+            the same position every time.
+        2. 37-39 seconds is way too long for the purposes of this project. If someone were using this in real life, they'd
+        want to be able to enter their criteria, press enter, and immediately receive a personalized playlist.
+
+    Messed around with aggregation for about 25 minutes. Doesn't seem to affect the speed at all. Only when adding too
+    much to the aggregation do you see it cause any difference, the difference being slightly poorer performance.
+
+    The speed of mongoDB's queries (unsurprisingly) is not the reason for how slow it is to create a playlist. I
+    suspect the issue is that I am returning way too many Documents. I'm almost certain that this is due to the number of
+    artists being returned when searching related genres.  As a result I've made sure to add an aggregation into
+    getSongsByGenre in order to limit how many artists I receive each time it is called.
+
+    Limiting the amount of artists that can be returned from a given genre happened to do the trick. My naive approach
+    that worked fine when working with only a couple thousand documents was not scalable. By using the $sample pipeline
+    I'm still able to generate a seeded playlist without retrieving and processing hundreds of thousands of documents.
+
+    Adding this aggregation has taken the time it takes from 38-39s to ~4s, 9.5-9.75 times faster.
+
+Overall pretty happy with how things are going so far, especially with this huge jump in speed. I feel like this change
+doesn't warp the results into something other than what is intended, and nets a large  enough performance boost that it
+could have a real-world application. Didn't actually end up creating a separate branch when making these optimizations,
+which is something I should get into the habit of so I can be prepared for when I go into the industry. I don't know if
+I'm going to continue adding to this log, but I felt like writing my exact thoughts down as I worked help me better
+walk through what I needed to do to get exactly what I set out to accomplish.

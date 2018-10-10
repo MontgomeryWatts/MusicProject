@@ -1,4 +1,4 @@
-package db.queries;
+package db.queries.stats;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;

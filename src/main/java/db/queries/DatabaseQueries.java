@@ -2,6 +2,7 @@ package db.queries;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
 import java.util.*;
@@ -13,6 +14,7 @@ public class DatabaseQueries {
 
     //How many songs should be returned by a random search
     private static final int SONGS_TO_RETURN = 100;
+    private static final int ARTISTS_TO_RETURN = 10;
 
     /**
      * Parses the collabs set from the Document retrieved from the collabCollection
@@ -72,15 +74,27 @@ public class DatabaseQueries {
      */
 
     public static Set<Document> getSongsByArtist(MongoCollection<Document> songsCollection, String artistName){
-        return songsCollection.find( eq("artist", artistName) )
-                .into(new HashSet<>());
+        return songsCollection.aggregate(
+                Arrays.asList(
+                    Aggregates.match( eq("artist", artistName) ),
+                    Aggregates.sample(SONGS_TO_RETURN)
+                    )
+        ).into(new HashSet<>());
     }
 
     public static Set<Document> getSongsByGenre(MongoCollection<Document> artistCollection, MongoCollection<Document> songsCollection, Set<String> genres){
         Set<Document> songs = new HashSet<>();
         Set<String> artistNames = new HashSet<>();
         for (String genre: genres){
-            for(Document artistDoc: artistCollection.find(new Document("genres", genre))){
+
+            HashSet<Document> artistsFromRelatedGenres = artistCollection.aggregate(
+                    Arrays.asList(
+                            Aggregates.match( eq("genres", genre)),
+                            Aggregates.sample(ARTISTS_TO_RETURN)
+                    )
+            ).into(new HashSet<>());
+
+            for(Document artistDoc: artistsFromRelatedGenres){
                 artistNames.add( artistDoc.getString("_id") );
             }
         }

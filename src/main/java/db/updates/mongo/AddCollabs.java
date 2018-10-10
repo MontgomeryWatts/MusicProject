@@ -15,7 +15,8 @@ import static com.mongodb.client.model.Filters.*;
 /**
  * The purpose of this program is to create a collection that indicates which artists have collaborated on
  * songs with each other without having to do multiple queries at runtime to gather the same information.
- * Currently intended to be run once after all artists and songs have been added to the database.
+ * This program only writes to the collabs collection. If you wish to create the song and artist Documents
+ * that correspond to these newly create documents, run {@link db.updates.spotify.AddReferencedArtists#main(String[])}}
  */
 
 @SuppressWarnings("unchecked")
@@ -35,6 +36,7 @@ public class AddCollabs {
 
                 //For every song Document that is by the artist and has other artists featured on it
                 for (Document songDoc : songs.find(and(eq("artist", artistName), exists("featured")))) {
+                    //For every artist in the featured list
                     for (String featured : (List<String>) songDoc.get("featured")) {
                         featuredArtists.add(featured);
 

@@ -268,8 +268,10 @@ public class SpotifyQueries {
 
         try{
             final Paging<Artist> artistPaging = artReq.execute();
-            for( Artist a: artistPaging.getItems()) {
-                id = a.getId();
+            for( Artist artist: artistPaging.getItems()) {
+                if(artistName.toLowerCase().equals(artist.getName().toLowerCase())) {
+                    id = artist.getId();
+                }
             }
         } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
 

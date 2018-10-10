@@ -15,9 +15,8 @@ public class CreatePlaylist {
     private static final int DEFAULT_DURATION = 3600;
 
     public static void main(String[] args) {
-        getTrackUris(null, DEFAULT_DURATION, null);
+        getTrackUris("Isaiah Rashad", DEFAULT_DURATION, null);
     }
-
 
     public static Set<String> getTrackUris(String artist, int duration, Set<String> genres){
         MongoClient client = new MongoClient();
@@ -58,7 +57,6 @@ public class CreatePlaylist {
             int songDuration = song.getInteger("duration");
             if (songDuration <= duration) {
                 playlistURIs.add(song.getString("_id"));
-                System.out.println( song.getString("title") + "  -  " + song.getString("artist"));
             }
             duration -= songDuration;
         }
