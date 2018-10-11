@@ -3,6 +3,7 @@ package db.queries;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import db.updates.spotify.SpotifyQueries;
 import org.bson.Document;
 
 import java.util.*;
@@ -15,7 +16,17 @@ public class CreatePlaylist {
     private static final int DEFAULT_DURATION = 3600;
 
     public static void main(String[] args) {
-        getTrackUris("Isaiah Rashad", DEFAULT_DURATION, null);
+
+        MongoClient client = new MongoClient();
+        MongoDatabase db = client.getDatabase("music");
+        MongoCollection<Document> usersCollection = db.getCollection("userinfo");
+
+        String username = "loco__motives";
+        String playlistName = "Gorillaz Test";
+        String[] uris = getTrackUris("Gorillaz", DEFAULT_DURATION, null).toArray(new String[0]);
+
+        String playlistId = SpotifyQueries.createPlaylist(usersCollection, username, playlistName);
+        SpotifyQueries.addTracksToPlaylist(usersCollection, username, playlistId, uris);
     }
 
     public static Set<String> getTrackUris(String artist, int duration, Set<String> genres){
@@ -49,6 +60,7 @@ public class CreatePlaylist {
             int songDuration = song.getInteger("duration");
             if (songDuration <= duration) {
                 playlistURIs.add(song.getString("_id"));
+                System.out.println( song.getString("title") + "  -  " + song.getString("artist") );
             }
             duration -= songDuration;
         }

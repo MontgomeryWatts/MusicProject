@@ -41,7 +41,9 @@ public class DatabaseQueries {
 
     /**
      * Retrieves an artist's document from the artists collection, performing a case-insensitive text search
-     * searching for an exact match on the given artist name.
+     * searching for an exact match on the given artist name. It is necessary to have a text index on the _id field
+     * for this method to not throw an exception. This can be performed in the MongoDB shell by entering
+     * db.artists.createIndex({'_id':"text"})
      * @param artistCollection The MongoCollection containing artist Documents
      * @param artistName The name of the artist whose document we are attempting to retrieve
      * @return The first Document whose _id contains keywords in the searchPhrase, or null.

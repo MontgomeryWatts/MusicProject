@@ -22,7 +22,7 @@ public class UpdateSongs {
         for(Document artistDoc: artistsCollection.find() ){
             String artistName = artistDoc.getString("_id");
             System.out.println("Attempting to add new songs for " + artistName);
-            addSongs(songsCollection, artistName);
+            addSongs(songsCollection, artistsCollection, artistName);
 
         }
     }

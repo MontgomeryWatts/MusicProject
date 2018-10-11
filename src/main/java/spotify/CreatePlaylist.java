@@ -30,7 +30,7 @@ public class CreatePlaylist {
         String playlistName = "Playlist For Lee";
 
         final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost");
-        String code = "AQDknLbQeyEIQawtAw4QxKhaBa0TNtmRA8CTbCe0S5zFa1EHOnm7ROxf7ZDL11dnJRbFCDzF5f7BZNQnVtIinFXlt4OT746S5PSG2xmw5TA9qAQ-0uh8wxdhYDpSoml7gnZdSkZApAj4nT2HmqFAl8Jj5_4fyFY7jCDO4o7yrlCyg50SVcg6PAcyh668zBiQAwa9jnvVIIBmK0VTUA6nrQ";
+        String code = "AQDSr-aybtUROQVCpzbFsVQ2l7I37xyNT6ZmWVcLUXjrtFn-VEjow3dSfBC5SHCecPq0cNo5dGglDEHJC2sOXNCPC9p2oJ-epxJDEusW7TUeSZuKsWM3sA1opMuFNRkMlQHU-QtGx8glB6f8GB1lhKwX4sqtswwtzxzx_Qjjk-O5g-phPXz-cZy6KKdNEB5fPBkjJnKmXs9Iy4D8mLFENg";
         SpotifyApi spotifyApi = SpotifyQueries.createSpotifyAPI(redirectUri);
 
 
@@ -47,7 +47,7 @@ public class CreatePlaylist {
 
             System.out.println("Expires in: " + authorizationCodeCredentials.getExpiresIn());
         } catch (IOException | SpotifyWebApiException e) {
-            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
         }
 
         //Make playlist
@@ -62,16 +62,15 @@ public class CreatePlaylist {
             final Playlist playlist = request.execute();
             playlistID = playlist.getId();
 
-
             System.out.println("Name: " + playlist.getName());
         } catch (IOException | SpotifyWebApiException e) {
-            System.out.println("Error: " + e.getMessage());
+            e.printStackTrace();
         }
 
 
 
         //Add tracks to playlist
-        Set<String> trackIDs = db.queries.CreatePlaylist.getTrackUris("Lil Wayne", 7200, null);
+        Set<String> trackIDs = db.queries.CreatePlaylist.getTrackUris("Isaiah Rashad", 7200, null);
 
         final String[] uris = trackIDs.toArray(new String[0]);
 

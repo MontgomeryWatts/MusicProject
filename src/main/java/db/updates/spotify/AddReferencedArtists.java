@@ -36,8 +36,7 @@ public class AddReferencedArtists {
             Document artistDoc = artistsCollection.find( eq("_id", name) ).first();
             if(artistDoc == null){
                 System.out.println("Attempting to create documents for: " + name);
-                addArtist(artistsCollection, name);
-                addSongs(songsCollection, name);
+                addArtistAndSongs(songsCollection, artistsCollection, name);
             }
         }
     }

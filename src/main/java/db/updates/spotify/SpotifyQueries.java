@@ -4,14 +4,21 @@ import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.exceptions.detailed.ForbiddenException;
 import com.wrapper.spotify.exceptions.detailed.ServiceUnavailableException;
 import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
+import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
+import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRefreshRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 import com.wrapper.spotify.requests.data.albums.GetAlbumsTracksRequest;
+import com.wrapper.spotify.requests.data.artists.GetArtistRequest;
 import com.wrapper.spotify.requests.data.artists.GetArtistsAlbumsRequest;
+import com.wrapper.spotify.requests.data.playlists.AddTracksToPlaylistRequest;
+import com.wrapper.spotify.requests.data.playlists.CreatePlaylistRequest;
 import com.wrapper.spotify.requests.data.search.simplified.SearchArtistsRequest;
+import db.queries.DatabaseQueries;
 import org.bson.Document;
 
 import java.io.File;
@@ -26,6 +33,18 @@ import static com.mongodb.client.model.Filters.*;
 public class SpotifyQueries {
 
     /**
+     * Helper function that calls addArtist and addSongs sequentially. Ensuring they are called in this order makes it
+     * so that in addSongs a internal database query is made that may spare an external query being sent to Spotify.
+     * @param songsCollection MongoCollection containing song Documents
+     * @param artistsCollection MongoCollection containing artist Documents
+     * @param artistName The name of the artist to attempt to add
+     */
+    public static void addArtistAndSongs(MongoCollection<Document> songsCollection, MongoCollection<Document> artistsCollection, String artistName){
+        addArtist(artistsCollection, artistName);
+        addSongs(songsCollection, artistsCollection, artistName);
+    }
+
+    /**
      * Attempts to create and add an artist Document to a given collection.
      * @param artistCollection The MongoCollection to add the Document to
      * @param artistName The name of the artist to look up
@@ -38,17 +57,16 @@ public class SpotifyQueries {
             return;
 
         SpotifyApi spotifyApi = createSpotifyAPI();
-        String id = getArtistID(spotifyApi, artistName);
+        String spotifyId = getArtistID(spotifyApi, artistName);
 
-        if(id == null)
+        if(spotifyId == null)
             return;
 
-        String spotifyUri = "spotify:artist:" + id;
-        List<String> genres = getArtistGenres(spotifyApi, artistName);
+        List<String> genres = getArtistGenres(spotifyApi, spotifyId);
 
         Document doc = new Document("_id", artistName)
                 .append("genres", genres)
-                .append("spotify", spotifyUri);
+                .append("spotify_id", spotifyId);
 
         try{
             artistCollection.insertOne(doc);
@@ -63,51 +81,52 @@ public class SpotifyQueries {
      * @param artistName The name of the artist whose songs are being looked up
      */
 
-    static void addSongs(MongoCollection<Document> songsCollection, String artistName) {
+    static void addSongs(MongoCollection<Document> songsCollection, MongoCollection<Document> artistsCollection, String artistName) {
 
         SpotifyApi spotifyApi = createSpotifyAPI();
-        String artistID = getArtistID(spotifyApi, artistName);
+
+        Document artistDoc = DatabaseQueries.getArtistDoc(artistsCollection, artistName);
+        String artistID = (artistDoc != null) ? artistDoc.getString("spotify_id")
+                : getArtistID(spotifyApi, artistName);
         if(artistID == null)
             return;
 
         Paging<AlbumSimplified> albums = getAlbums(spotifyApi, artistID);
+        if(albums != null ) {
+            String id;
+            int duration;
+            String title;
+            Document doc;
+            List<String> featured;
 
-        String id;
-        int duration;
-        String title;
-        Document doc;
-        List<String> featured;
+            for (AlbumSimplified album : albums.getItems()) {
 
-        for (AlbumSimplified album : albums.getItems()) {
+                for (TrackSimplified track : getTracks(spotifyApi, album.getId()).getItems()) {
+                    title = track.getName();
+                    id = track.getUri();
+                    duration = track.getDurationMs() / 1000;
+                    featured = getFeatured(artistName, track);
 
-            if(album == null)
-                continue;
+                    Document songDoc = songsCollection.find(eq("_id", id)).first();
 
-            for (TrackSimplified track : getTracks(spotifyApi, album.getId()).getItems()) {
-                title = track.getName();
-                id = track.getUri();
-                duration = track.getDurationMs() / 1000;
-                featured = getFeatured(artistName, track);
+                    //This check should prevent any potential MongoWriteExceptions
+                    if (songDoc == null) {
+                        try {
 
-                Document songDoc = songsCollection.find( eq("_id", id) ).first();
+                            doc = new Document("_id", id)
+                                    .append("artist", artistName)
+                                    .append("album", album.getName())
+                                    .append("title", title)
+                                    .append("duration", duration);
 
-                //This check should prevent any potential MongoWriteExceptions
-                if(songDoc == null) {
-                    try {
+                            if (featured.size() != 0)
+                                doc.append("featured", featured);
 
-                        doc = new Document("_id", id)
-                                .append("artist", artistName)
-                                .append("album", album.getName())
-                                .append("title", title)
-                                .append("duration", duration);
+                            songsCollection.insertOne(doc);
 
-                        if (featured.size() != 0)
-                            doc.append("featured", featured);
-
-                        songsCollection.insertOne(doc);
-
-                    } catch (MongoWriteException mwe) {
-                        mwe.printStackTrace();
+                        } catch (MongoWriteException mwe) {
+                            mwe.printStackTrace();
+                        }
                     }
                 }
             }
@@ -142,10 +161,10 @@ public class SpotifyQueries {
             System.err.println(e.getMessage());
         }
 
-        final ClientCredentialsRequest request = spotifyApi.clientCredentials().build();
+        ClientCredentialsRequest request = spotifyApi.clientCredentials().build();
 
         try{
-            final ClientCredentials clientCredentials = request.execute();
+            ClientCredentials clientCredentials = request.execute();
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
         } catch (Exception e){
@@ -153,6 +172,109 @@ public class SpotifyQueries {
         }
 
         return spotifyApi;
+    }
+
+    /**
+     * Attempts to create an empty Spotify playlist, and returns the spotify id of the playlist so that tracks may be
+     * added to it.
+     * @param usersCollection The MongoCollection containing Documents with user access/refresh tokens
+     * @param username The username of the person to create a playlist for
+     * @param playlistName The name of the playlist to create
+     * @return a String containing the Spotify Id of the playlist
+     */
+
+    public static String createPlaylist(MongoCollection<Document> usersCollection, String username, String playlistName){
+        SpotifyApi spotifyApi = createSpotifyAPI();
+
+        Document userDoc = usersCollection.find( eq("_id", username) ).first();
+        if(userDoc == null) {
+            return null;
+        }
+
+        spotifyApi.setAccessToken( userDoc.getString("access_token") );
+        spotifyApi.setRefreshToken( userDoc.getString("refresh_token") );
+
+        CreatePlaylistRequest request = spotifyApi.createPlaylist(username, playlistName)
+                .collaborative(false)
+                .public_(true)
+                .name(playlistName)
+                .build();
+
+        try {
+            final Playlist playlist = request.execute();
+            return playlist.getId();
+
+        } catch (ForbiddenException fe) {
+            //Stuff to refresh access/refresh tokens
+            refreshTokens(usersCollection, username);
+            return createPlaylist(usersCollection, username, playlistName);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static boolean addTracksToPlaylist(MongoCollection<Document> usersCollection, String username, String playlistId, String[] uris){
+        if(playlistId == null) {
+            return false;
+        }
+
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        Document userDoc = usersCollection.find( eq("_id", username) ).first();
+        if(userDoc == null) {
+            return false;
+        }
+
+        spotifyApi.setAccessToken( userDoc.getString("access_token") );
+        spotifyApi.setRefreshToken( userDoc.getString("refresh_token") );
+
+        AddTracksToPlaylistRequest addTracksToPlaylistRequest = spotifyApi
+                .addTracksToPlaylist(username, playlistId, uris)
+                .build();
+
+        try {
+            addTracksToPlaylistRequest.execute();
+            return true;
+        } catch (ForbiddenException fe) {
+            //Stuff to refresh access/refresh tokens
+            refreshTokens(usersCollection, username);
+            return addTracksToPlaylist(usersCollection, username, playlistId, uris);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void refreshTokens(MongoCollection<Document> usersCollection, String username){
+        Document userDoc = usersCollection.find( eq("_id", username) ).first();
+        if(userDoc == null)
+            return;
+
+        String refreshToken = userDoc.getString("refresh_token");
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        spotifyApi.setRefreshToken(refreshToken);
+        AuthorizationCodeRefreshRequest refreshRequest  = spotifyApi.authorizationCodeRefresh().build();
+        try {
+            AuthorizationCodeCredentials credentials = refreshRequest.execute();
+            refreshToken = credentials.getRefreshToken();
+            String accessToken = credentials.getAccessToken();
+            spotifyApi.setRefreshToken(refreshToken);
+            spotifyApi.setAccessToken(accessToken);
+            userDoc.put("refresh_token", refreshToken);
+            userDoc.put("access_token", accessToken);
+            usersCollection.replaceOne( eq("_id", username), userDoc);
+        } catch(TooManyRequestsException tmre){
+            int wait = tmre.getRetryAfter() * 1000;
+            System.out.println("TooManyRequestsException in refreshTokens, waiting for " + wait + " milliseconds");
+            try{
+                Thread.sleep(wait);
+            } catch (InterruptedException ie){
+                ie.printStackTrace();
+            }
+            refreshTokens(usersCollection, username);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -200,23 +322,19 @@ public class SpotifyQueries {
     /**
      * Retrieves a List of all of an artist's musical genres
      * @param spotifyApi A SpotifyAPI Object to generate requests
-     * @param artistName The name of the artist whose genres are being retrieved
+     * @param spotifyId The Id of the artist whose genres are being retrieved
      * @return A List containing the artist's genres
      */
 
-    private static List<String> getArtistGenres(SpotifyApi spotifyApi, String artistName){
+    private static List<String> getArtistGenres(SpotifyApi spotifyApi, String spotifyId){
         List<String> genres = new ArrayList<>();
 
-        final SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
-                .market(CountryCode.US)
-                .limit(1)
+        GetArtistRequest artReq = spotifyApi.getArtist(spotifyId)
                 .build();
 
         try{
-            final Paging<Artist> artistPaging = artReq.execute();
-            for( Artist a: artistPaging.getItems()) {
-                genres = Arrays.asList(a.getGenres());
-            }
+            Artist artist = artReq.execute();
+            genres = Arrays.asList(artist.getGenres());
         } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
 
             int wait = tmre.getRetryAfter() * 1000;
@@ -226,7 +344,7 @@ public class SpotifyQueries {
             } catch (InterruptedException ie){
                 ie.printStackTrace();
             }
-            return getArtistGenres(spotifyApi, artistName);
+            return getArtistGenres(spotifyApi, spotifyId);
 
         } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
             try{
@@ -235,7 +353,7 @@ public class SpotifyQueries {
             {
                 ie.printStackTrace();
             }
-            return getArtistGenres(spotifyApi, artistName);
+            return getArtistGenres(spotifyApi, spotifyId);
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -253,12 +371,12 @@ public class SpotifyQueries {
     private static String getArtistID(SpotifyApi spotifyApi, String artistName){
         String id = null;
 
-        final SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
+        SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
                 .market(CountryCode.US)
                 .build();
 
         try{
-            final Paging<Artist> artistPaging = artReq.execute();
+            Paging<Artist> artistPaging = artReq.execute();
             for( Artist artist: artistPaging.getItems()) {
                 if(artistName.toLowerCase().equals(artist.getName().toLowerCase())) {
                     id = artist.getId();
@@ -317,7 +435,7 @@ public class SpotifyQueries {
     private static Paging<TrackSimplified> getTracks(SpotifyApi spotifyApi, String albumID){
         Paging<TrackSimplified> tracks = new Paging.Builder<TrackSimplified>().build();
 
-        final GetAlbumsTracksRequest txRequest = spotifyApi.getAlbumsTracks(albumID).build();
+        GetAlbumsTracksRequest txRequest = spotifyApi.getAlbumsTracks(albumID).build();
 
         try{
             tracks = txRequest.execute();

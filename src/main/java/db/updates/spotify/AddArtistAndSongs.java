@@ -19,15 +19,14 @@ public class AddArtistAndSongs {
     public static void main(String[] args) {
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
-        MongoCollection<Document> songs = db.getCollection("songs");
-        MongoCollection<Document> artistsCol = db.getCollection("artists");
+        MongoCollection<Document> songsCollection = db.getCollection("songs");
+        MongoCollection<Document> artistsCollection = db.getCollection("artists");
 
         String path = "src/main/resources/artistNames.txt";
         List<String> artists = getArtistNames(path);
 
         for(String artist: artists) {
-            addSongs(songs, artist);
-            addArtist(artistsCol, artist);
+            addArtistAndSongs(songsCollection, artistsCollection, artist);
         }
     }
     /**
