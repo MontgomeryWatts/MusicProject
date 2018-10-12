@@ -7,6 +7,7 @@ import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.detailed.ForbiddenException;
 import com.wrapper.spotify.exceptions.detailed.ServiceUnavailableException;
 import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
+import com.wrapper.spotify.exceptions.detailed.UnauthorizedException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.*;
@@ -204,7 +205,7 @@ public class SpotifyQueries {
             final Playlist playlist = request.execute();
             return playlist.getId();
 
-        } catch (ForbiddenException fe) {
+        } catch (UnauthorizedException | ForbiddenException fe) {
             //Stuff to refresh access/refresh tokens
             refreshTokens(usersCollection, username);
             return createPlaylist(usersCollection, username, playlistName);
@@ -235,7 +236,7 @@ public class SpotifyQueries {
         try {
             addTracksToPlaylistRequest.execute();
             return true;
-        } catch (ForbiddenException fe) {
+        } catch (UnauthorizedException | ForbiddenException fe) {
             //Stuff to refresh access/refresh tokens
             refreshTokens(usersCollection, username);
             return addTracksToPlaylist(usersCollection, username, playlistId, uris);
