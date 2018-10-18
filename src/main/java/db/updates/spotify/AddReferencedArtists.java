@@ -11,10 +11,6 @@ import java.util.HashSet;
 import static com.mongodb.client.model.Filters.eq;
 import static db.updates.spotify.SpotifyQueries.*;
 
-/**
- * Goes through all collab documents retrieving artist names from the collabs set. Any artist from this set that does
- * not have a document in the artistsCollection is added to both the songs and artists collections.
- */
 
 @SuppressWarnings("unchecked")
 public class AddReferencedArtists {
@@ -36,7 +32,7 @@ public class AddReferencedArtists {
             Document artistDoc = artistsCollection.find( eq("_id", name) ).first();
             if(artistDoc == null){
                 System.out.println("Attempting to create documents for: " + name);
-                addArtistAndSongs(songsCollection, artistsCollection, name);
+                //addArtistAndSongs(songsCollection, artistsCollection, name);
             }
         }
     }

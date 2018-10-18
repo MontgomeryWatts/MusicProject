@@ -8,59 +8,61 @@ import org.bson.Document;
 
 import java.util.*;
 
-import static db.queries.DatabaseQueries.*;
+import static com.mongodb.client.model.Accumulators.*;
+import static com.mongodb.client.model.Aggregates.*;
+import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Filters.in;
 
 @SuppressWarnings("unchecked")
 public class CreatePlaylist {
 
-    private static final int DEFAULT_DURATION = 3600;
+    private static final int ONE_HOUR = 3600;
+    private static final int DEFAULT_DURATION = ONE_HOUR * 3;
 
     public static void main(String[] args) {
 
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
         MongoCollection<Document> usersCollection = db.getCollection("userinfo");
+        MongoCollection<Document> artistCollection = db.getCollection("artists");
 
         String username = "loco__motives";
-        String playlistName = "Gorillaz Test";
-        String[] uris = getTrackUris("Gorillaz", DEFAULT_DURATION, null).toArray(new String[0]);
+        String playlistName = "New Structure Test2";
+        Set<String> artists = new HashSet<>();
+        artists.add("Isaiah Rashad");
+        artists.add("Jaden Smith");
+        Set<String> genres = new HashSet<>();
+        genres.add("hip hop");
+        genres.add("underground hip hop");
+        Set<String> uriSet = getTrackUris(artistCollection,artists, genres, DEFAULT_DURATION, true);
+        String[] uris = uriSet.toArray(new String[0]);
 
         String playlistId = SpotifyQueries.createPlaylist(usersCollection, username, playlistName);
         SpotifyQueries.addTracksToPlaylist(usersCollection, username, playlistId, uris);
     }
 
-    public static Set<String> getTrackUris(String artist, int duration, Set<String> genres){
-        MongoClient client = new MongoClient();
-        MongoDatabase db = client.getDatabase("music");
-        MongoCollection<Document> artistCollection = db.getCollection("artists");
-        MongoCollection<Document> songsCollection = db.getCollection("songs");
+    private static Set<String> getTrackUris(MongoCollection<Document> artistCollection, Set<String> artists, Set<String> genres, int duration,
+                                           boolean onlyExplicit){
 
-        Set<Document> songs  = new HashSet<>();
+        List<Document> songsList = artistCollection.aggregate(
+                Arrays.asList(
+                        match( or( in("genres", genres), in("_id.name", artists) )),
+                        unwind("$albums"),
+                        match( eq("albums.is_explicit", onlyExplicit)),
+                        unwind("$albums.songs"),
+                        group( "$_id.name", addToSet("songs","$albums.songs")),
+                        unwind("$songs"),
+                        replaceRoot("$songs")
+                )
+        ).into( new ArrayList<>());
 
-        if(artist != null){
-            Set<String> artistGenres = getArtistGenres(artistCollection, artist);
-            songs.addAll(getSongsByGenre(artistCollection, songsCollection, artistGenres));
-            songs.addAll(getSongsByFeaturedArtist(songsCollection, artist));
-        }
-
-        if(genres != null){
-            songs.addAll( getSongsByGenre( artistCollection, songsCollection, genres));
-        }
-
-        //Should no criteria be entered at all
-        if( artist == null && genres == null){
-            songs.addAll( getSongsByRandom(songsCollection));
-        }
-
-
-        List<Document> songsList = new ArrayList<>(songs);
         Set<String> playlistURIs = new HashSet<>();
         while ( duration > 180 && !songsList.isEmpty()){
             Document song = songsList.remove(Math.abs(new Random().nextInt()) % songsList.size());
             int songDuration = song.getInteger("duration");
             if (songDuration <= duration) {
-                playlistURIs.add(song.getString("_id"));
-                System.out.println( song.getString("title") + "  -  " + song.getString("artist") );
+                playlistURIs.add(song.getString("uri"));
+                System.out.println(song.getString("title"));
             }
             duration -= songDuration;
         }

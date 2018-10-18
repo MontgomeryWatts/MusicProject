@@ -1,12 +1,93 @@
-10/9/2018 5:51 EST
-Git revision number: c616dd76d1a2275a131716bbb0932e72044c9939
+10/17/2018
+Latest git commit: 37f0374d79b30d4a85b91eea06c7195ef9269d70
+
+I've realized that I'm using MongoDB relationally, as opposed to embedding information as is its intended purpose. As such,
+I've been looking at how I could restructure the documents so all relevant information is retrieved, instead of performing
+the pseudo-joins caused by having information spread across many collections.
+
+After much deliberation I've decided to only have a single artists collection, each document of which will include an
+artist' info, albums, and songs. This way I will be able to retrieve all songs of a given artist by retrieving a single
+artist document instead of querying thousands of song documents. Although albums themselves are not used to retrieve songs
+currently, including them within the embedded document can allow for future features without restructuring the data again.
+
+
+An example of the new structure can be seen below:
+
+{
+"_id":{"name": "Artist Name", "uri":"Artist Uri"},
+"genres":["genre1", "genre2"],
+"albums":[
+            {
+            "title":"Album Title",
+            "uri":"Album Uri",
+            "is_explicit":true,
+            "songs":[
+                        {
+                            "title":"Song Title",
+                            "duration":44,
+                            "featured": ["Artist2 Name"],
+                            "uri":"trackUri"
+                        },
+
+                        {
+                            "title":"Song Title",
+                            "duration":128,
+                            "uri":"trackUri"
+                        }
+                    ]
+            }
+	    ]
+}
+
+I've also been playing around with the aggregation pipeline more in the Mongo shell. With this new document structure I
+believe that I can retrieve songs by genre and artist with a single query as opposed to one for each parameter (one query
+for each genre, one query for each artist).
+
+Having only a single artists collection is concerning when it comes to growing the database 'organically'. By this I mean
+when I had a collabs collection, it was easy to find which artists existed in the collabs document that did not have their
+own artist document. These artists could then be entered into the database. This new structure makes this process harder,
+but my thinking is that it is more important to optimize the operations that would be performed more often.
+
+I've also been looking more into how indexes may be of used with this new format. Mongo aggregation takes advantage of
+indexes only at the beginning of the pipeline, so any fields that I'm querying at the beginning can have indexes created
+for them. At this point, only the genres and _id.name fields are queried initially, so indexes may be created for them.
+
+After looking at the way Spotify returns its info, it isn't as simple as calling getIsExplicit() on an album to add the
+is_explicit field. This can be circumvented by checking each individual track to see if any are explicit.
+
+Some headaches refactoring the code to correspond to the new document structure. Currently for getTrackUris I have a
+boolean as a parameter called allowExplicit. When I was coming up with the aggregation I included an equality check in the
+match stage when checking for explicit albums. Defined like this, allowExplicit is more like onlyExplicit, where if it is
+true only songs from explicit albums may be added, and vice versa. My initial thought is to create the list of
+aggregation arguments prior to the aggregation instead of 'in-line'.
+
+After some thinking I think I will keep it as is. As such I'll be renaming allowExplicit to onlyExplicit. The name is
+somewhat misleading, because an album will be marked as explicit if a single track on it contains explicit lyrics.
+Therefore a clean (implicit?) song may still be added if onlyExplicit is true.
+
+The $replaceRoot stage of aggregation would be useful but it doesn't seem to be available in version 3.2.2 of the java
+mongodb driver. I'm going to update the version from 3.2.2 to 3.6.4, hopefully without breaking the project as a whole.
+
+Updating the driver did not break the project. Not directly at least. All auxiliary programs e.g. those in db.queries.stats
+will not function correctly as they still depend on a document structure that no longer exists. I don't know how easy it
+would be to reimplement the DegreesOfSeparation program without a collabs collection. I'm sure it'll result in more
+practice with the aggregation pipeline.
+
+This entry doesn't feel like it had as much of me walking through my thoughts. I think this is because I've been writing
+down ideas in class and thinking about the design while working, driving, etc. As such, everything was already laid out
+and it was just up to me to implement everything I'd already planned.
+
+________________________________________________________________________________________________________________________
+
+10/9/2018
+Latest git commit: c616dd76d1a2275a131716bbb0932e72044c9939
 
 Thoughts on how the SpotifyDB project is going, what I'm learning, what I need to learn:
     All of the queries I was running that were fine when the database only had to go a couple thousand documents are very
     slow now that I have hundreds of thousands of documents in the database. Is this because there is simply too many
     documents being returned? Instead of finding every single artist with a given genre or given collaborating artist,
     find a sample of them? MongoDB aggregation is a (self-reported) powerful tool when dealing with large amounts of data.
-    The aggregation I currently have in CreatePlaylist for making parameterless playlists (getSongsByRandom) seemed fast.
+    The aggregation I currently have in CreatePlaylist for making parameter-less playlists (getSongsByRandom) seemed fast.
 
     I'm going to try right now to make a speed comparison when providing only an artist to getTrackUris when using
     aggregation and when using the current method.  This is also a good opportunity to get used to creating and merging
