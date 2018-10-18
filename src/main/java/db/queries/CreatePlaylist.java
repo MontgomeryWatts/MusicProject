@@ -8,7 +8,6 @@ import org.bson.Document;
 
 import java.util.*;
 
-import static com.mongodb.client.model.Accumulators.*;
 import static com.mongodb.client.model.Aggregates.*;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Filters.in;
@@ -27,17 +26,17 @@ public class CreatePlaylist {
         MongoCollection<Document> artistCollection = db.getCollection("artists");
 
         String username = "loco__motives";
-        String playlistName = "New Structure Test2";
+        String playlistName = "New Structure Test 4";
         Set<String> artists = new HashSet<>();
         artists.add("Isaiah Rashad");
         artists.add("Jaden Smith");
         Set<String> genres = new HashSet<>();
         genres.add("hip hop");
-        genres.add("underground hip hop");
+        genres.add("indie r&b");
         Set<String> uriSet = getTrackUris(artistCollection,artists, genres, DEFAULT_DURATION, true);
         String[] uris = uriSet.toArray(new String[0]);
 
-        String playlistId = SpotifyQueries.createPlaylist(usersCollection, username, playlistName);
+        String playlistId = SpotifyQueries.createSpotifyPlaylist(usersCollection, username, playlistName);
         SpotifyQueries.addTracksToPlaylist(usersCollection, username, playlistId, uris);
     }
 
@@ -50,9 +49,7 @@ public class CreatePlaylist {
                         unwind("$albums"),
                         match( eq("albums.is_explicit", onlyExplicit)),
                         unwind("$albums.songs"),
-                        group( "$_id.name", addToSet("songs","$albums.songs")),
-                        unwind("$songs"),
-                        replaceRoot("$songs")
+                        replaceRoot("$albums.songs")
                 )
         ).into( new ArrayList<>());
 
@@ -63,8 +60,8 @@ public class CreatePlaylist {
             if (songDuration <= duration) {
                 playlistURIs.add(song.getString("uri"));
                 System.out.println(song.getString("title"));
+                duration -= songDuration;
             }
-            duration -= songDuration;
         }
 
         return playlistURIs;

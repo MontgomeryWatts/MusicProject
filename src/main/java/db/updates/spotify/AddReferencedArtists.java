@@ -3,12 +3,14 @@ package db.updates.spotify;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Arrays;
 
-import static com.mongodb.client.model.Filters.eq;
 import static db.updates.spotify.SpotifyQueries.*;
 
 
@@ -17,23 +19,23 @@ public class AddReferencedArtists {
     public static void main(String[] args) {
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
-        MongoCollection<Document> songsCollection = db.getCollection("songs");
         MongoCollection<Document> artistsCollection = db.getCollection("artists");
-        MongoCollection<Document> collabsCollection = db.getCollection("collabs");
 
-        HashSet<String> artistNames = new HashSet<>();
+        Document namesDoc = artistsCollection.aggregate(
+                Arrays.asList(
+                        Aggregates.unwind("$albums"),
+                        Aggregates.unwind("$albums.songs"),
+                        Aggregates.replaceRoot("$albums.songs"),
+                        Aggregates.match(Filters.exists("featured")),
+                        Aggregates.unwind("$featured"),
+                        Aggregates.group("All referenced artists", Accumulators.addToSet("names", "$featured"))
+                )
+        ).first();
 
-        //Add all artists that have appeared on a song by someone already in the database
-        for( Document collabDoc: collabsCollection.find() ){
-            artistNames.addAll( (ArrayList<String>) collabDoc.get("collabs") );
-        }
+        ArrayList<String> artistNames = (ArrayList<String>) namesDoc.get("names");
 
-        for( String name: artistNames){
-            Document artistDoc = artistsCollection.find( eq("_id", name) ).first();
-            if(artistDoc == null){
-                System.out.println("Attempting to create documents for: " + name);
-                //addArtistAndSongs(songsCollection, artistsCollection, name);
-            }
+        for(String name: artistNames) {
+            addArtist(artistsCollection, name);
         }
     }
 }

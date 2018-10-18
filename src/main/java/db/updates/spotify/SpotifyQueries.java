@@ -93,6 +93,37 @@ public class SpotifyQueries {
 
     }
 
+    public static boolean addTracksToPlaylist(MongoCollection<Document> usersCollection, String username, String playlistId, String[] uris){
+        if(playlistId == null) {
+            return false;
+        }
+
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        Document userDoc = usersCollection.find( eq("_id", username) ).first();
+        if(userDoc == null) {
+            return false;
+        }
+
+        spotifyApi.setAccessToken( userDoc.getString("access_token") );
+        spotifyApi.setRefreshToken( userDoc.getString("refresh_token") );
+
+        AddTracksToPlaylistRequest addTracksToPlaylistRequest = spotifyApi
+                .addTracksToPlaylist(username, playlistId, uris)
+                .build();
+
+        try {
+            addTracksToPlaylistRequest.execute();
+            return true;
+        } catch (UnauthorizedException | ForbiddenException fe) {
+            //Stuff to refresh access/refresh tokens
+            refreshTokens(usersCollection, username);
+            return addTracksToPlaylist(usersCollection, username, playlistId, uris);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     /**
      * Creates a SpotifyApi Object with my given client info that can be used to generate requests.
      * @return A SpotifyApi Object that can make requests
@@ -143,7 +174,7 @@ public class SpotifyQueries {
      * @return a String containing the Spotify Id of the playlist
      */
 
-    public static String createPlaylist(MongoCollection<Document> usersCollection, String username, String playlistName){
+    public static String createSpotifyPlaylist(MongoCollection<Document> usersCollection, String username, String playlistName){
         SpotifyApi spotifyApi = createSpotifyAPI();
 
         Document userDoc = usersCollection.find( eq("_id", username) ).first();
@@ -167,74 +198,11 @@ public class SpotifyQueries {
         } catch (UnauthorizedException | ForbiddenException fe) {
             //Stuff to refresh access/refresh tokens
             refreshTokens(usersCollection, username);
-            return createPlaylist(usersCollection, username, playlistName);
+            return createSpotifyPlaylist(usersCollection, username, playlistName);
         } catch (Exception e){
             e.printStackTrace();
         }
         return null;
-    }
-
-    public static boolean addTracksToPlaylist(MongoCollection<Document> usersCollection, String username, String playlistId, String[] uris){
-        if(playlistId == null) {
-            return false;
-        }
-
-        SpotifyApi spotifyApi = createSpotifyAPI();
-        Document userDoc = usersCollection.find( eq("_id", username) ).first();
-        if(userDoc == null) {
-            return false;
-        }
-
-        spotifyApi.setAccessToken( userDoc.getString("access_token") );
-        spotifyApi.setRefreshToken( userDoc.getString("refresh_token") );
-
-        AddTracksToPlaylistRequest addTracksToPlaylistRequest = spotifyApi
-                .addTracksToPlaylist(username, playlistId, uris)
-                .build();
-
-        try {
-            addTracksToPlaylistRequest.execute();
-            return true;
-        } catch (UnauthorizedException | ForbiddenException fe) {
-            //Stuff to refresh access/refresh tokens
-            refreshTokens(usersCollection, username);
-            return addTracksToPlaylist(usersCollection, username, playlistId, uris);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public static void refreshTokens(MongoCollection<Document> usersCollection, String username){
-        Document userDoc = usersCollection.find( eq("_id", username) ).first();
-        if(userDoc == null)
-            return;
-
-        String refreshToken = userDoc.getString("refresh_token");
-        SpotifyApi spotifyApi = createSpotifyAPI();
-        spotifyApi.setRefreshToken(refreshToken);
-        AuthorizationCodeRefreshRequest refreshRequest  = spotifyApi.authorizationCodeRefresh().build();
-        try {
-            AuthorizationCodeCredentials credentials = refreshRequest.execute();
-            refreshToken = credentials.getRefreshToken();
-            String accessToken = credentials.getAccessToken();
-            spotifyApi.setRefreshToken(refreshToken);
-            spotifyApi.setAccessToken(accessToken);
-            userDoc.put("refresh_token", refreshToken);
-            userDoc.put("access_token", accessToken);
-            usersCollection.replaceOne( eq("_id", username), userDoc);
-        } catch(TooManyRequestsException tmre){
-            int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in refreshTokens, waiting for " + wait + " milliseconds");
-            try{
-                Thread.sleep(wait);
-            } catch (InterruptedException ie){
-                ie.printStackTrace();
-            }
-            refreshTokens(usersCollection, username);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -425,4 +393,35 @@ public class SpotifyQueries {
         return tracks;
     }
 
+    private static void refreshTokens(MongoCollection<Document> usersCollection, String username){
+        Document userDoc = usersCollection.find( eq("_id", username) ).first();
+        if(userDoc == null)
+            return;
+
+        String refreshToken = userDoc.getString("refresh_token");
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        spotifyApi.setRefreshToken(refreshToken);
+        AuthorizationCodeRefreshRequest refreshRequest  = spotifyApi.authorizationCodeRefresh().build();
+        try {
+            AuthorizationCodeCredentials credentials = refreshRequest.execute();
+            refreshToken = credentials.getRefreshToken();
+            String accessToken = credentials.getAccessToken();
+            spotifyApi.setRefreshToken(refreshToken);
+            spotifyApi.setAccessToken(accessToken);
+            userDoc.put("refresh_token", refreshToken);
+            userDoc.put("access_token", accessToken);
+            usersCollection.replaceOne( eq("_id", username), userDoc);
+        } catch(TooManyRequestsException tmre){
+            int wait = tmre.getRetryAfter() * 1000;
+            System.out.println("TooManyRequestsException in refreshTokens, waiting for " + wait + " milliseconds");
+            try{
+                Thread.sleep(wait);
+            } catch (InterruptedException ie){
+                ie.printStackTrace();
+            }
+            refreshTokens(usersCollection, username);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 }

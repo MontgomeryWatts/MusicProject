@@ -18,7 +18,6 @@ public class AddArtists {
     public static void main(String[] args) {
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
-        MongoCollection<Document> songsCollection = db.getCollection("songs");
         MongoCollection<Document> artistsCollection = db.getCollection("artists");
 
         String path = "src/main/resources/artistNames.txt";
@@ -34,7 +33,7 @@ public class AddArtists {
      * @return A List containing the artists names
      */
 
-    public static List<String> getArtistNames(String path){
+    private static List<String> getArtistNames(String path){
         List<String> artists = new ArrayList<>();
 
         try {
