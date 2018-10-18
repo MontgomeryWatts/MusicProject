@@ -11,10 +11,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import static db.updates.spotify.SpotifyQueries.*;
-import static db.updates.spotify.SpotifyQueries.addSongs;
 
 
-public class AddArtistAndSongs {
+public class AddArtists {
 
     public static void main(String[] args) {
         MongoClient client = new MongoClient();
@@ -26,7 +25,7 @@ public class AddArtistAndSongs {
         List<String> artists = getArtistNames(path);
 
         for(String artist: artists) {
-            addArtistAndSongs(songsCollection, artistsCollection, artist);
+            addArtist(artistsCollection, artist);
         }
     }
     /**
