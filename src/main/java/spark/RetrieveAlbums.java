@@ -42,7 +42,8 @@ public class RetrieveAlbums {
 
                 else {
                     List<Document> albums = (List<Document>) artistDoc.get("albums");
-                    String artist = artistDoc.getString("_id");
+                    Document idDoc = (Document) artistDoc.get("_id");
+                    String artist = idDoc.getString("name");
 
                     try {
                         Template t = config.getTemplate("retrieveAlbums.ftl");

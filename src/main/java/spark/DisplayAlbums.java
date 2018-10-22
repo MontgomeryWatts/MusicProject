@@ -8,6 +8,7 @@ import freemarker.template.Template;
 import org.bson.Document;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,13 +26,13 @@ public class DisplayAlbums {
         MongoDatabase db = client.getDatabase("music");
         MongoCollection<Document> artists = db.getCollection("artists");
 
-        String artistName = "kanye west";
+        String artistName = "Jaden Smith";
         Document artistDoc  = getArtistDoc(artists, artistName);
-        List<Document> albums = (List<Document>)artistDoc.get("albums");
+        List<Document> albums = (ArrayList<Document>)artistDoc.get("albums");
 
-        //If the artist name was not formatted correctly in the initial query,
-        //this will ensure it is displayed correctly
-        String artist = artistDoc.getString("_id");
+        //If the artist name was not formatted correctly in the initial query, this will ensure it is displayed correctly
+        Document idDoc = (Document) artistDoc.get("_id");
+        String artist = idDoc.getString("name");
 
         Spark.setPort(80);
 

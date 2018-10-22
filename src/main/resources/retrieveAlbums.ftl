@@ -27,8 +27,8 @@
         <#if artist??>
             <p>${artist}'s Albums:</p>
             <#list albums as album>
-                <a href="${album["spotify"]}">
-                    ${album["name"]}
+                <a href="${album["uri"]}">
+                    ${album["title"]}
                 </a>
                 <br>
             </#list>

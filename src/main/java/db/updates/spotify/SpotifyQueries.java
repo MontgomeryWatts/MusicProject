@@ -62,7 +62,7 @@ public class SpotifyQueries {
 
                     if(track.getIsExplicit())
                         explicit = true;
-                    List<String> featured= getFeatured(artistName, track);
+                    Set<String> featured= getFeatured(artistName, track);
 
                     Document songDoc = new Document("title", track.getName())
                             .append("duration", track.getDurationMs() / 1000)
@@ -338,18 +338,18 @@ public class SpotifyQueries {
 
 
     /**
-     * Gets a list of any other artists featured on a track.
+     * Gets a set of any other artists featured on a track.
      * @param artistName The name of the artist whose album the track is on
      * @param track The track
-     * @return A List containing any featured artists
+     * @return A Set containing any featured artists
      */
 
-    private static List<String> getFeatured(String artistName, TrackSimplified track){
-        List<String> featured = new ArrayList<>();
+    private static Set<String> getFeatured(String artistName, TrackSimplified track){
+        Set<String> featured = new HashSet<>();
         for(ArtistSimplified a: track.getArtists()){
-            if ( !a.getName().equals(artistName) )
-                featured.add(a.getName());
+             featured.add(a.getName());
         }
+        featured.remove(artistName);
         return featured;
     }
 
