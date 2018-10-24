@@ -32,8 +32,7 @@ An example of the new structure can be seen below:
                         {
                             "title":"Song Title",
                             "duration":128,
-                            "uri":"tra
-                           ckUri"
+                            "uri":"trackUri"
                         }
                     ]
             }

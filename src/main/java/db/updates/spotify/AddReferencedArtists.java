@@ -28,14 +28,14 @@ public class AddReferencedArtists {
                         Aggregates.replaceRoot("$albums.songs"),
                         Aggregates.match(Filters.exists("featured")),
                         Aggregates.unwind("$featured"),
-                        Aggregates.group("All referenced artists", Accumulators.addToSet("names", "$featured"))
+                        Aggregates.group("All referenced artists", Accumulators.addToSet("ids", "$featured"))
                 )
         ).first();
 
-        ArrayList<String> artistNames = (ArrayList<String>) namesDoc.get("names");
+        ArrayList<String> artistIds = (ArrayList<String>) namesDoc.get("ids");
 
-        for(String name: artistNames) {
-            addArtist(artistsCollection, name);
+        for(String id: artistIds) {
+            addArtistById(artistsCollection, id);
         }
     }
 }

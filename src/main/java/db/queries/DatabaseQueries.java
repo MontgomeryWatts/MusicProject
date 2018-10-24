@@ -3,16 +3,13 @@ package db.queries;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
 import java.util.*;
 
 import static com.mongodb.client.model.Accumulators.addToSet;
-import static com.mongodb.client.model.Aggregates.group;
-import static com.mongodb.client.model.Aggregates.replaceRoot;
-import static com.mongodb.client.model.Aggregates.unwind;
-import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Aggregates.*;
+import static com.mongodb.client.model.Filters.*;
 
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
@@ -20,15 +17,15 @@ public class DatabaseQueries {
     /**
      * Parses the collabs set from the Document retrieved from the collabCollection
      * @param artistCollection The MongoCollection containing collab Documents
-     * @param artistName The name of the artist whose document we are attempting to retrieve
+     * @param artistUri The uri of the artist whose document we are attempting to retrieve
      * @return A List of Strings representing the names of all of the artists the given artist has worked with.
      */
-    public static List<String> getArtistCollabNames(MongoCollection<Document> artistCollection, String artistName){
+    public static List<String> getArtistCollabNames(MongoCollection<Document> artistCollection, String artistUri){
         Document artistFeaturedDoc = artistCollection.aggregate(Arrays.asList(
-                Aggregates.match( eq("_id.name", artistName)),
+                Aggregates.match( eq("_id.uri", artistUri)),
                 Aggregates.unwind("$albums"),
                 Aggregates.unwind("$albums.songs"),
-                Aggregates.match( Filters.exists("albums.songs.featured")),
+                Aggregates.match( exists("albums.songs.featured")),
                 Aggregates.unwind("$albums.songs.featured"),
                 Aggregates.group( "$_id.name", addToSet("featured","$albums.songs.featured"))
         )).first();
@@ -80,5 +77,16 @@ public class DatabaseQueries {
         ).first();
 
         return songsDoc.getInteger("duration");
+    }
+
+    public static Set<Document> getSongsFeaturedOn(MongoCollection<Document> artistCollection, String artistId){
+        return artistCollection.aggregate(
+                Arrays.asList(
+                        unwind("$albums"),
+                        unwind("$albums.songs"),
+                        match( and( exists("albums.songs.featured"), eq("albums.songs.featured", artistId))),
+                        replaceRoot("$albums.songs")
+                )
+        ).into(new HashSet<>());
     }
 }

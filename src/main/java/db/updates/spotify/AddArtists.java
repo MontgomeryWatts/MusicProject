@@ -24,7 +24,7 @@ public class AddArtists {
         List<String> artists = getArtistNames(path);
 
         for(String artist: artists) {
-            addArtist(artistsCollection, artist);
+            addArtistByName(artistsCollection, artist);
         }
     }
     /**

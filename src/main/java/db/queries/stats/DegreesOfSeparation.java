@@ -3,6 +3,7 @@ package db.queries.stats;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import db.queries.DatabaseQueries;
 import org.bson.Document;
 
@@ -13,8 +14,8 @@ public class DegreesOfSeparation {
         MongoClient client = new MongoClient();
         MongoDatabase db = client.getDatabase("music");
         MongoCollection<Document> artistCollection = db.getCollection("artists");
-        String initialArtist = "Isaiah Rashad";
-        String targetArtist = "J Dilla";
+        String initialArtist = "6aaMZ3fcfLv4tEbmY7bjRM";
+        String targetArtist = "2h93pZq0e7k5yf4dywlkpM";
         System.out.println( showPath(artistCollection, initialArtist, targetArtist));
     }
 
