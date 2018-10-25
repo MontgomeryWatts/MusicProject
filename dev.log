@@ -1,3 +1,31 @@
+10/24/2018
+Latest git commit: 89cafd5b0c7cbae456afc95aeb7e61a374eacf31
+
+I want to restructure the documents again, so that the year the album was released is included in the embedded album
+document. This way a user may specify that they only want songs from a given time period, e.g. the 80s. This sounds easy
+enough, but the requests that I'm using from the spotify wrapper library return AlbumSimplified objects, which do not
+have a method to return release date.
+
+There are only two request types that return fully-detailed Album objects, GetAlbumRequest and GetSeveralAlbumsRequest,
+both of which require knowing the ids of the albums you wish to retrieve. The only way I can think of in order to find the
+ids of all albums is to perform a GetArtistAlbumsRequest, but only return the ids of the albums returned instead of the
+Paging<AlbumSimplified> that I currently do. This requires doing another query to Spotify, which could cause more waits
+caused by a TooManyRequestsException.
+
+I think this won't be too much of a problem, as I've noticed I can make up for this extra request elsewhere. I make a
+separate request whenever I want to find an artist's genres, id, and name, or a listing of all the tracks in an album.
+Album objects contain a Paging of tracks, so I can eliminate the need for a GetAlbumsTracksRequest. If I similarly start
+to return Artist objects in my requests, I can get rid of the need to make a separate request for an artist's genres.
+
+If I make these changes, I still net one less request to Spotify, while still getting all of the information that I want.
+
+Made all the changes outlined above. Despite the fact that only one less request per artist is made, I'm getting very few
+TooManyRequestsExceptions. So few that I thought that the program was hanging. Adding multiple artists is also much faster.
+Before when running AddReferencedArtists after a single initial run of AddArtists, it took around 14 minutes to add 800
+artists. Now it took only 3 minutes. Very exciting, and a time I hope to reduce even further once I figure out a good way
+to make it asynchronous.
+
+________________________________________________________________________________________________________________________
 10/17/2018
 Latest git commit: 37f0374d79b30d4a85b91eea06c7195ef9269d70
 
