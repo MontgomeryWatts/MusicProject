@@ -14,6 +14,15 @@ import static com.mongodb.client.model.Filters.*;
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
 
+    public static Document getAlbum(MongoCollection<Document> artistCollection, String artistUri, String albumUri){
+        return artistCollection.aggregate(Arrays.asList(
+                Aggregates.match( eq("_id.uri", artistUri) ),
+                Aggregates.unwind("$albums"),
+                Aggregates.match( eq("albums.uri", albumUri)),
+                Aggregates.replaceRoot("$albums")
+        )).first();
+    }
+
     public static Document getArtist(MongoCollection<Document> artistCollection, String uri){
         return artistCollection.find( eq("_id.uri", uri)).first();
     }

@@ -20,6 +20,9 @@ public class MongoService {
         collection = db.getCollection("artists");
     }
 
+    public Document getAlbum(String artistUri, String albumUri){
+        return DatabaseQueries.getAlbum(collection, artistUri, albumUri);
+    }
     public Document getArtist(String uri){
         return DatabaseQueries.getArtist(collection, uri);
     }
