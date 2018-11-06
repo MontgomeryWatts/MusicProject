@@ -14,6 +14,23 @@ import static com.mongodb.client.model.Filters.*;
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
 
+    public static Document getArtist(MongoCollection<Document> artistCollection, String uri){
+        return artistCollection.find( eq("_id.uri", uri)).first();
+    }
+
+    public static List<Document> getArtists(MongoCollection<Document> artistCollection){
+        return artistCollection.aggregate(Collections.singletonList(
+                Aggregates.sample(25)
+        )).into(new ArrayList<>());
+    }
+
+    public static List<Document> getArtistsByGenre(MongoCollection<Document> artistCollection, String genre){
+        return artistCollection.aggregate(Arrays.asList(
+                Aggregates.match( eq("genres", genre)),
+                Aggregates.sample(25)
+        )).into(new ArrayList<>());
+    }
+
     /**
      * Parses the collabs set from the Document retrieved from the collabCollection
      * @param artistCollection The MongoCollection containing collab Documents

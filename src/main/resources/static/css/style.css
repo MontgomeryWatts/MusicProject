@@ -1,0 +1,10 @@
+.artist-preview{
+    height: 150px;
+    width: 150px;
+    border-radius: 50%;
+}
+
+.album{
+    height: 200px;
+    width: 200px;
+}

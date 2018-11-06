@@ -34,8 +34,13 @@ public class AddReferencedArtists {
 
         ArrayList<String> artistIds = (ArrayList<String>) namesDoc.get("ids");
 
+        long numDocsAtStart = artistsCollection.count();
+        long startTime = System.currentTimeMillis();
         for(String id: artistIds) {
             addArtistById(artistsCollection, id);
         }
+        long endTime = System.currentTimeMillis();
+        long numDocsAtEnd = artistsCollection.count();
+        System.out.println("Took " + (endTime - startTime)/1000 + " seconds to add " + (numDocsAtEnd-numDocsAtStart) + " artists.");
     }
 }

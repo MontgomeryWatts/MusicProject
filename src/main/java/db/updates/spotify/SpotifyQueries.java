@@ -303,7 +303,7 @@ public class SpotifyQueries {
         } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
 
             int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in getArtistName, waiting for " + wait + " milliseconds");
+            System.out.println("TooManyRequestsException in getArtistById, waiting for " + wait + " milliseconds");
             try{
                 Thread.sleep(wait);
             } catch (InterruptedException ie){
