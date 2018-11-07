@@ -7,15 +7,16 @@
 
     <body>
         <#list artists as artist>
-            <#assign local_link = "/artists/" + artist["_id"]["uri"]>
-            <#assign spotify_link = "spotify:artist:" + artist["_id"]["uri"]>
             <#if artist["_id"]["image"]??>
-                <a href=${local_link}>
-                    <img src="${artist["_id"]["image"]}" class="artist-preview">
-                </a>
-                <a href=${spotify_link}>
-                    <p>${artist["_id"]["name"]}</p>
-                </a>
+                <div>
+                    <a href="/artists/${artist["_id"]["uri"]}" class="image-link">
+                        <img src="${artist["_id"]["image"]}" class="artist-preview">
+                    </a>
+                    <span>&nbsp;</span>
+                    <a href="spotify:artist:${artist["_id"]["uri"]}">
+                        ${artist["_id"]["name"]}
+                    </a>
+                </div>
             </#if>
         </#list>
 

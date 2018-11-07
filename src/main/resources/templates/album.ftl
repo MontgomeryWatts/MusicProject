@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Displays random artists</title>
+        <title><#if album??>${album["title"]}</#if></title>
         <link rel="stylesheet" href="/css/style.css">
     </head>
 

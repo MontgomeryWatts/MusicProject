@@ -1,20 +1,29 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Displays random artists</title>
+        <title><#if artist??>${artist["_id"]["name"]}</#if></title>
         <link rel="stylesheet" href="/css/style.css">
     </head>
 
     <body>
         <#if artist??>
+            <h1>${artist["_id"]["name"]}</h1>
+            <img src="${artist["_id"]["image"]}" class="artist-preview">
+            <br>
+            <br>
+            <h2>Albums: </h2>
+            <br>
             <#list artist["albums"] as album>
-                <a href="/artists/${artist["_id"]["uri"]}/${album["uri"]}">
-                    <img src="${album["image"]}" class="album">
-                </a>
-                <a href=${album["uri"]}>
-                    <p>${album["title"]}</p>
-                </a>
-                <br>
+                <div>
+                    <a href="/artists/${artist["_id"]["uri"]}/${album["uri"]}" class="image-link">
+                        <img src="${album["image"]}" class="album-image">
+                    </a>
+                    <span>&nbsp;</span>
+                    <a href="${album["uri"]}">
+                        ${album["title"]}
+                    </a>
+                    <span>${album["year"]?c}</span>
+                </div>
             </#list>
         </#if>
 

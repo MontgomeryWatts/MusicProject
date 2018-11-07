@@ -1,10 +1,18 @@
 .artist-preview{
     height: 150px;
     width: 150px;
+    vertical-align: middle;
+    margin: 5px 0 5px 0;
     border-radius: 50%;
 }
 
-.album{
+.album-image{
     height: 200px;
     width: 200px;
+    vertical-align: text-top;
+    margin: 5px 0 5px 0;
+}
+
+.image-link{
+    text-decoration: none;
 }
