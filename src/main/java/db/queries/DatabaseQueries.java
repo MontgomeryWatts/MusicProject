@@ -27,15 +27,22 @@ public class DatabaseQueries {
         return artistCollection.find( eq("_id.uri", uri)).first();
     }
 
-    public static List<Document> getArtists(MongoCollection<Document> artistCollection){
-        return artistCollection.aggregate(Collections.singletonList(
+    public static List<Document> getArtistsByGenre(MongoCollection<Document> artistCollection, String genre){
+        return artistCollection.aggregate(Arrays.asList(
+                Aggregates.match( eq("genres", genre)),
                 Aggregates.sample(25)
         )).into(new ArrayList<>());
     }
 
-    public static List<Document> getArtistsByGenre(MongoCollection<Document> artistCollection, String genre){
-        return artistCollection.aggregate(Arrays.asList(
-                Aggregates.match( eq("genres", genre)),
+    public static List<Document> getArtistsByName(MongoCollection<Document> artistCollection, String artistName){
+        String searchPhrase = "\"" + artistName + "\"";
+        Document filter = new Document("$text", new Document("$search", searchPhrase));
+        return  artistCollection.find(filter).into(new ArrayList<>());
+    }
+
+
+    public static List<Document> getArtistsByRandom(MongoCollection<Document> artistCollection){
+        return artistCollection.aggregate(Collections.singletonList(
                 Aggregates.sample(25)
         )).into(new ArrayList<>());
     }
