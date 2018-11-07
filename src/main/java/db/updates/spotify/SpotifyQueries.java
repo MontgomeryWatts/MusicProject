@@ -365,7 +365,7 @@ public class SpotifyQueries {
             if(albumImages.length != 0)
                 albumDoc.append("image", albumImages[0].getUrl());
 
-            Set<Document> songDocuments = new HashSet<>();
+            List<Document> songDocuments = new ArrayList<>();
             boolean explicit = false;
             for(TrackSimplified track: album.getTracks().getItems() ){
 
