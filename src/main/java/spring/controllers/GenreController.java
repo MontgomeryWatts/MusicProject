@@ -16,10 +16,19 @@ public class GenreController {
     @Autowired
     private MongoService service;
 
+    @GetMapping("/genres")
+    public String genres(Model model){
+        List<String> genres = service.getGenres();
+        model.addAttribute("genres", genres);
+        return "genres";
+    }
+
     @GetMapping("/genres/{genre}")
-    public String artistsGenre(Model model, @PathVariable String genre){
+    public String genre(Model model, @PathVariable String genre){
         List<Document> artists = service.getArtistsByGenre(genre);
         model.addAttribute("artists", artists);
         return "artists";
     }
+
+
 }

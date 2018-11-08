@@ -35,4 +35,7 @@ public class MongoService {
     public List<Document> getArtistsByName(String name){
         return DatabaseQueries.getArtistsByName(collection, name);
     }
+    public List<String> getGenres(){
+        return DatabaseQueries.getRandomGenres(collection);
+    }
 }

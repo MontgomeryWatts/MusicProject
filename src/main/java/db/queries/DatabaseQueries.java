@@ -2,7 +2,6 @@ package db.queries;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Accumulators;
-import com.mongodb.client.model.Aggregates;
 import org.bson.Document;
 
 import java.util.*;
@@ -13,13 +12,14 @@ import static com.mongodb.client.model.Filters.*;
 
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
+    private static final int SAMPLE_SIZE = 25;
 
     public static Document getAlbum(MongoCollection<Document> artistCollection, String artistUri, String albumUri){
         return artistCollection.aggregate(Arrays.asList(
-                Aggregates.match( eq("_id.uri", artistUri) ),
-                Aggregates.unwind("$albums"),
-                Aggregates.match( eq("albums.uri", albumUri)),
-                Aggregates.replaceRoot("$albums")
+                match( eq("_id.uri", artistUri) ),
+                unwind("$albums"),
+                match( eq("albums.uri", albumUri)),
+                replaceRoot("$albums")
         )).first();
     }
 
@@ -29,8 +29,8 @@ public class DatabaseQueries {
 
     public static List<Document> getArtistsByGenre(MongoCollection<Document> artistCollection, String genre){
         return artistCollection.aggregate(Arrays.asList(
-                Aggregates.match( eq("genres", genre)),
-                Aggregates.sample(25)
+                match( eq("genres", genre)),
+                sample(SAMPLE_SIZE)
         )).into(new ArrayList<>());
     }
 
@@ -43,7 +43,7 @@ public class DatabaseQueries {
 
     public static List<Document> getArtistsByRandom(MongoCollection<Document> artistCollection){
         return artistCollection.aggregate(Collections.singletonList(
-                Aggregates.sample(25)
+                sample(SAMPLE_SIZE)
         )).into(new ArrayList<>());
     }
 
@@ -55,12 +55,12 @@ public class DatabaseQueries {
      */
     public static List<String> getArtistCollabNames(MongoCollection<Document> artistCollection, String artistUri){
         Document artistFeaturedDoc = artistCollection.aggregate(Arrays.asList(
-                Aggregates.match( eq("_id.uri", artistUri)),
-                Aggregates.unwind("$albums"),
-                Aggregates.unwind("$albums.songs"),
-                Aggregates.match( exists("albums.songs.featured")),
-                Aggregates.unwind("$albums.songs.featured"),
-                Aggregates.group( "$_id.name", addToSet("featured","$albums.songs.featured"))
+                match( eq("_id.uri", artistUri)),
+                unwind("$albums"),
+                unwind("$albums.songs"),
+                match( exists("albums.songs.featured")),
+                unwind("$albums.songs.featured"),
+                group( "$_id.name", addToSet("featured","$albums.songs.featured"))
         )).first();
 
         return (artistFeaturedDoc == null ) ? new ArrayList<>() :(ArrayList<String>) artistFeaturedDoc.get("featured");
@@ -97,6 +97,16 @@ public class DatabaseQueries {
         ).first();
 
         return songsDoc.getInteger("total_songs");
+    }
+
+    public static List<String> getRandomGenres(MongoCollection<Document> artistCollection){
+        Document genresDoc = artistCollection.aggregate(Arrays.asList(
+                unwind("$genres"),
+                group("$genres"),
+                sample(SAMPLE_SIZE),
+                group( null, addToSet("genres","$_id"))
+        )).first();
+        return (ArrayList<String>)genresDoc.get("genres");
     }
 
     public static int getTotalDuration(MongoCollection<Document> artistCollection){
