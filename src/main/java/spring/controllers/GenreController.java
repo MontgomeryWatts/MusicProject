@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import spring.services.MongoService;
 
 import java.util.List;
@@ -24,8 +25,12 @@ public class GenreController {
     }
 
     @GetMapping("/genres/{genre}")
-    public String genre(Model model, @PathVariable String genre){
-        List<Document> artists = service.getArtistsByGenre(genre);
+    public String genre(Model model, @PathVariable String genre, @RequestParam(name = "p", required = false, defaultValue = "1") String page_number){
+        int number = 1;
+        if (page_number.matches("\\d+"))
+            number = Integer.parseInt(page_number);
+
+        List<Document> artists = service.getArtistsByGenre(genre, number);
         model.addAttribute("artists", artists);
         return "artists";
     }

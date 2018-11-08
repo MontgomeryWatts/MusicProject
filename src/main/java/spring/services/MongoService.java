@@ -29,8 +29,8 @@ public class MongoService {
     public List<Document> getArtists(){
         return DatabaseQueries.getArtistsByRandom(collection);
     }
-    public List<Document> getArtistsByGenre(String genre){
-        return DatabaseQueries.getArtistsByGenre(collection, genre);
+    public List<Document> getArtistsByGenre(String genre, int toSkip){
+        return DatabaseQueries.getArtistsByGenre(collection, genre, toSkip);
     }
     public List<Document> getArtistsByName(String name){
         return DatabaseQueries.getArtistsByName(collection, name);

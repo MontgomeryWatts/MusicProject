@@ -27,10 +27,11 @@ public class DatabaseQueries {
         return artistCollection.find( eq("_id.uri", uri)).first();
     }
 
-    public static List<Document> getArtistsByGenre(MongoCollection<Document> artistCollection, String genre){
+    public static List<Document> getArtistsByGenre(MongoCollection<Document> artistCollection, String genre, int skip){
         return artistCollection.aggregate(Arrays.asList(
                 match( eq("genres", genre)),
-                sample(SAMPLE_SIZE)
+                skip(SAMPLE_SIZE * (skip-1) ),
+                limit(SAMPLE_SIZE)
         )).into(new ArrayList<>());
     }
 

@@ -11,8 +11,12 @@
             <img src="${artist["_id"]["image"]}" class="artist-preview">
             <br>
             <br>
-            <h2>Albums: </h2>
-            <br>
+            <h2>Genres</h2>
+            <#list artist["genres"] as genre>
+                <a href="/genres/${genre}?p=1">${genre}</a>
+            </#list>
+
+            <h2>Albums</h2>
             <#list artist["albums"] as album>
                 <div>
                     <a href="/artists/${artist["_id"]["uri"]}/${album["uri"]}" class="image-link">

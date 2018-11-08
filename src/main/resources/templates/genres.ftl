@@ -8,7 +8,7 @@
     <body>
             <#if genres?has_content>
                 <#list genres as genre>
-                    <a href="/genres/${genre}" >${genre}</a>
+                    <a href="/genres/${genre}?p=1" >${genre}</a>
                     <br>
                 </#list>
             <#else>
