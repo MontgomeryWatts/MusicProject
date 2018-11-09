@@ -9,7 +9,9 @@
         <#if album??>
             <#list album["songs"] as song>
                 <a href="${song["uri"]}">
-                    <p>${song["title"]} - ${song["duration"]}</p>
+                    <p>
+                        ${song["title"]} - ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
+                    </p>
                 </a>
             </#list>
         </#if>

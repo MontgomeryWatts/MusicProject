@@ -3,13 +3,10 @@ package db.updates.spotify;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Accumulators;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static db.updates.spotify.SpotifyQueries.*;
 
@@ -21,22 +18,12 @@ public class AddReferencedArtists {
         MongoDatabase db = client.getDatabase("music");
         MongoCollection<Document> artistsCollection = db.getCollection("artists");
 
-        Document namesDoc = artistsCollection.aggregate(
-                Arrays.asList(
-                        Aggregates.unwind("$albums"),
-                        Aggregates.unwind("$albums.songs"),
-                        Aggregates.replaceRoot("$albums.songs"),
-                        Aggregates.match(Filters.exists("featured")),
-                        Aggregates.unwind("$featured"),
-                        Aggregates.group("All referenced artists", Accumulators.addToSet("ids", "$featured"))
-                )
-        ).first();
-
-        ArrayList<String> artistIds = (ArrayList<String>) namesDoc.get("ids");
-
+        Set<String> allFeatured = artistsCollection.distinct("albums.songs.featured", String.class).into(new HashSet<>());
+        Set<String> inDatabase = artistsCollection.distinct("_id.uri", String.class).into(new HashSet<>());
+        allFeatured.removeAll(inDatabase);
         long numDocsAtStart = artistsCollection.count();
         long startTime = System.currentTimeMillis();
-        for(String id: artistIds) {
+        for(String id: allFeatured) {
             addArtistById(artistsCollection, id);
         }
         long endTime = System.currentTimeMillis();

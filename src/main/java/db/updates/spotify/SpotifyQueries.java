@@ -175,7 +175,7 @@ public class SpotifyQueries {
         return null;
     }
 
-    private static Album[] getAlbums(SpotifyApi spotifyApi, Set<String> ids){
+    private static Album[] getAlbums(SpotifyApi spotifyApi, List<String> ids){
         String[] idArray = ids.toArray(new String[0]);
         if (idArray.length == 0)
             return new Album[0];
@@ -217,8 +217,8 @@ public class SpotifyQueries {
      * @return a Set containing all of the Spotify ids of the given artist's albums
      */
 
-    private static Set<String> getAlbumIds(SpotifyApi spotifyApi, String artistID){
-        Set<String> albumIds = new HashSet<>();
+    private static List<String> getAlbumIds(SpotifyApi spotifyApi, String artistID){
+        List<String> albumIds = new ArrayList<>();
 
         final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistID)
                 .market(CountryCode.US)
@@ -232,14 +232,13 @@ public class SpotifyQueries {
         } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
 
             int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in getAlbums, waiting for " + wait + " milliseconds");
+            System.out.println("TooManyRequestsException in getAlbumIds, waiting for " + wait + " milliseconds");
             try{
                 Thread.sleep(wait);
             } catch (InterruptedException ie){
                 ie.printStackTrace();
             }
             return getAlbumIds(spotifyApi, artistID);
-
         } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
             try{
                 Thread.sleep(5000);
@@ -274,7 +273,7 @@ public class SpotifyQueries {
         } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
 
             int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in getArtistIds, waiting for " + wait + " milliseconds");
+            System.out.println("TooManyRequestsException in getArtistsByName, waiting for " + wait + " milliseconds");
             try{
                 Thread.sleep(wait);
             } catch (InterruptedException ie){
@@ -352,9 +351,9 @@ public class SpotifyQueries {
             idDoc.append("image", artistImages[0].getUrl());
 
         List<String> genres = Arrays.asList(artist.getGenres());
-        Set<String> albumIds = getAlbumIds(spotifyApi, spotifyId);
+        List<String> albumIds = getAlbumIds(spotifyApi, spotifyId);
         Album[] albums = getAlbums(spotifyApi, albumIds);
-        Set<Document> albumDocuments = new HashSet<>();
+        List<Document> albumDocuments = new ArrayList<>();
         for(Album album: albums){
             int year = Integer.parseInt(album.getReleaseDate().substring(0, 4));
             Document albumDoc = new Document("title", album.getName())
@@ -430,7 +429,7 @@ public class SpotifyQueries {
             }
             refreshTokens(usersCollection, username);
         } catch (Exception e){
-            e.printStackTrace();
+            refreshTokens(usersCollection, username);
         }
     }
 }
