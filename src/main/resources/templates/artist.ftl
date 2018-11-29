@@ -5,30 +5,54 @@
         <link rel="stylesheet" href="/css/style.css">
     </head>
 
-    <body>
+    <body style="background: #10171E;">
         <#if artist??>
             <h1>${artist["_id"]["name"]}</h1>
             <img src="${artist["_id"]["image"]}" class="artist-preview">
             <br>
             <br>
             <h2>Genres</h2>
-            <#list artist["genres"] as genre>
-                <a href="/genres/${genre}?p=1">${genre}</a>
-            </#list>
+            <table>
+                <tr>
+                    <#list artist["genres"] as genre>
+                        <a href="/genres/${genre}?p=1" class="tag">${genre}</a>
+                    </#list>
+                </tr>
+            </table>
+
 
             <h2>Albums</h2>
-            <#list artist["albums"] as album>
-                <div>
-                    <a href="/artists/${artist["_id"]["uri"]}/${album["uri"]}" class="image-link">
-                        <img src="${album["image"]}" class="album-image">
-                    </a>
-                    <span>&nbsp;</span>
-                    <a href="${album["uri"]}">
-                        ${album["title"]}
-                    </a>
-                    <span>${album["year"]?c}</span>
-                </div>
-            </#list>
+            <table style="color: white;">
+                <#list artist["albums"] as album>
+                    <tr>
+                        <td rowspan="3">
+                            <a href="/artists/${artist["_id"]["uri"]}/${album["uri"]}">
+                                <img src="${album["image"]}" class="album-image">
+                            </a>
+                        </td>
+                        <td>
+                            <a href="${album["uri"]}">
+                                ${album["title"]}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            ${album["year"]?c}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <#if album["is_explicit"]>
+                                <b>Explicit</b>
+                            <#else>
+                                Clean
+                            </#if>
+                        </td>
+                    </tr>
+                </#list>
+            </table>
+
         </#if>
 
 

@@ -10,7 +10,7 @@
             <#list artists as artist>
                 <#if artist["_id"]["image"]??>
                     <div>
-                        <a href="/artists/${artist["_id"]["uri"]}" class="image-link">
+                        <a href="/artists/${artist["_id"]["uri"]}">
                             <img src="${artist["_id"]["image"]}" class="artist-preview">
                         </a>
                         <span>&nbsp;</span>

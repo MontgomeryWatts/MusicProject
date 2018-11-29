@@ -1,3 +1,13 @@
+a{
+    text-decoration: none;
+    color: inherit;
+}
+
+body{
+    color: white;
+    background: #10171E;
+}
+
 .artist-preview{
     height: 150px;
     width: 150px;
@@ -13,6 +23,11 @@
     margin: 5px 0 5px 0;
 }
 
-.image-link{
+.tag{
+    padding: 2px 2px;
+    border-radius: 8px;
     text-decoration: none;
+    margin: 2px;
+    color: inherit;
+    background: black;
 }

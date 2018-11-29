@@ -21,6 +21,7 @@ public class AddReferencedArtists {
         Set<String> allFeatured = artistsCollection.distinct("albums.songs.featured", String.class).into(new HashSet<>());
         Set<String> inDatabase = artistsCollection.distinct("_id.uri", String.class).into(new HashSet<>());
         allFeatured.removeAll(inDatabase);
+        System.out.println("Attempting to insert " + allFeatured.size() + " artists to the database.");
         long numDocsAtStart = artistsCollection.count();
         long startTime = System.currentTimeMillis();
         for(String id: allFeatured) {
