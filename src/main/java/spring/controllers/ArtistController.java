@@ -46,16 +46,4 @@ public class ArtistController {
     public String artistsSearchGet(){
         return "search";
     }
-
-    @PostMapping("/artists/search")
-    public String artistsSearchPost(@RequestParam String search_input){
-        return "redirect:/artists/search/"+ search_input;
-    }
-
-    @GetMapping("/artists/search/{name}")
-    public String artistsSearchResults(Model model, @PathVariable String name){
-        List<Document> artists = service.getArtistsByName(name);
-        model.addAttribute("artists", artists);
-        return "artists";
-    }
 }

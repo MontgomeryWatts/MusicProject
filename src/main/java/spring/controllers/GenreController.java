@@ -18,8 +18,14 @@ public class GenreController {
     private MongoService service;
 
     @GetMapping("/genres")
-    public String genres(Model model){
-        List<String> genres = service.getGenres();
+    public String genres(Model model, @RequestParam(name = "letter", required = false) String letter){
+        List<String> genres;
+        if (letter != null){
+            char c = letter.charAt(0);
+            genres = service.getGenresByLetter(c);
+        }
+        else
+          genres = service.getGenres();
         model.addAttribute("genres", genres);
         return "genres";
     }
@@ -34,6 +40,5 @@ public class GenreController {
         model.addAttribute("artists", artists);
         return "artists";
     }
-
 
 }

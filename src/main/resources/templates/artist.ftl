@@ -5,10 +5,13 @@
         <link rel="stylesheet" href="/css/style.css">
     </head>
 
-    <body style="background: #10171E;">
+    <body>
+        <#include "/html/navigation.html">
         <#if artist??>
             <h1>${artist["_id"]["name"]}</h1>
-            <img src="${artist["_id"]["image"]}" class="artist-preview">
+            <#if artist["_id"]["image"]??>
+                <img src="${artist["_id"]["image"]}" class="artist-preview">
+            </#if>
             <br>
             <br>
             <h2>Genres</h2>
@@ -22,7 +25,7 @@
 
 
             <h2>Albums</h2>
-            <table style="color: white;">
+            <table>
                 <#list artist["albums"] as album>
                     <tr>
                         <td rowspan="3">

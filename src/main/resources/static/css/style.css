@@ -8,6 +8,17 @@ body{
     background: #10171E;
 }
 
+li{
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+ul{
+    display: flex;
+    list-style: none;
+    padding-left: 0;
+}
+
 .artist-preview{
     height: 150px;
     width: 150px;
@@ -23,11 +34,12 @@ body{
     margin: 5px 0 5px 0;
 }
 
+.label { text-align: right}
+
 .tag{
     padding: 2px 2px;
     border-radius: 8px;
     text-decoration: none;
     margin: 2px;
-    color: inherit;
     background: black;
 }

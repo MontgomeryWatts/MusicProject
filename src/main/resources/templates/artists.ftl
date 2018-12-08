@@ -6,6 +6,7 @@
     </head>
 
     <body>
+        <#include "/html/navigation.html">
         <#if artists?has_content>
             <#list artists as artist>
                 <#if artist["_id"]["image"]??>

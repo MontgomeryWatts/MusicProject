@@ -6,18 +6,17 @@
     </head>
 
     <body>
-            <#if genres?has_content>
-                <#list genres as genre>
-                    <a href="/genres/${genre}?p=1" >${genre}</a>
-                    <br>
-                </#list>
-            <#else>
-                <h1>
-                    NO GENRES FOUND
-                </h1>
-            </#if>
-
-
+        <#include "/html/navigation.html">
+        <#if genres?has_content>
+            <#list genres as genre>
+                <a href="/genres/${genre}?p=1" >${genre}</a>
+                <br>
+            </#list>
+        <#else>
+            <h1>
+                NO GENRES FOUND
+            </h1>
+        </#if>
     </body>
 
 </html>

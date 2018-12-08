@@ -1,7 +1,7 @@
 package db.queries;
 
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.model.Accumulators;
+import com.mongodb.client.model.*;
 import org.bson.Document;
 
 import java.util.*;
@@ -9,10 +9,26 @@ import java.util.*;
 import static com.mongodb.client.model.Accumulators.addToSet;
 import static com.mongodb.client.model.Aggregates.*;
 import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Projections.*;
 
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
     private static final int SAMPLE_SIZE = 25;
+
+
+    public static List<Document> createPlaylist(List<Document> potentialSongs, int duration){
+        List<Document> playlistDocs = new ArrayList<>();
+        while ( duration > 180 && !potentialSongs.isEmpty()){
+            Document song = potentialSongs.remove(Math.abs(new Random().nextInt()) % potentialSongs.size());
+            int songDuration = song.getInteger("duration");
+            if (songDuration <= duration) {
+                playlistDocs.add(song);
+                duration -= songDuration;
+            }
+        }
+        return playlistDocs;
+    }
+
 
     public static Document getAlbum(MongoCollection<Document> artistCollection, String artistUri, String albumUri){
         return artistCollection.aggregate(Arrays.asList(
@@ -87,6 +103,24 @@ public class DatabaseQueries {
         return  artistCollection.find(filter).first();
     }
 
+
+    public static List<String> getGenresByLetter(MongoCollection<Document> artistCollection, char letter){
+        if(!Character.isLetter(letter))
+            return new ArrayList<>();
+
+        String pattern = "^" + Character.toLowerCase(letter);
+        Document genresDoc = artistCollection.aggregate(Arrays.asList(
+                unwind("$genres"),
+                match(Filters.regex("genres", pattern, "i" )),
+                group("$genres", new ArrayList<>()),
+                sort(Sorts.ascending("_id")),
+                group(0, Accumulators.push("genres", "$_id"))
+        )).first();
+
+
+        return (genresDoc != null) ? (ArrayList<String>) genresDoc.get("genres") : new ArrayList<>();
+    }
+
     public static int getNumSongs(MongoCollection<Document> artistCollection){
         Document songsDoc = artistCollection.aggregate(
                 Arrays.asList(
@@ -121,6 +155,31 @@ public class DatabaseQueries {
         ).first();
 
         return songsDoc.getInteger("duration");
+    }
+
+    public static List<Document> getAllSongsByCriteria(MongoCollection<Document> artistCollection, Set<String> artists, Set<String> genres,
+                                                    boolean onlyExplicit, int startYear, int endYear){
+
+        //The driver won't let me make the _id field a document when using Aggregates.group
+        //Have to make an ugly document like this to do what I want
+        Document groupDoc = new Document("$group",
+                new Document ("_id", new Document("uri", "$albums.songs.uri")
+                    .append("title", "$albums.songs.title")
+                    .append("artist", "$_id.name")
+                    .append("duration", "$albums.songs.duration")) );
+
+        return artistCollection.aggregate(
+                Arrays.asList(
+                        match( or( in("genres", genres), in("_id.name", artists) )),
+                        unwind("$albums"),
+                        match( and( eq("albums.is_explicit", onlyExplicit),
+                                and( gte("albums.year", startYear), lte("albums.year", endYear)))) ,
+                        unwind("$albums.songs"),
+                        project(include("albums.songs")),
+                        groupDoc,
+                        replaceRoot("$_id")
+                )
+        ).into( new ArrayList<>());
     }
 
     public static Set<Document> getSongsFeaturedOn(MongoCollection<Document> artistCollection, String artistId){

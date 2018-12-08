@@ -6,6 +6,7 @@
     </head>
 
     <body>
+        <#include "/html/navigation.html">
         <#if album??>
             <#list album["songs"] as song>
                 <a href="${song["uri"]}">

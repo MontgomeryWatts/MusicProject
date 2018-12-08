@@ -2,23 +2,21 @@
 <html>
     <head>
         <title>Displays a searched artist's albums</title>
-        <style type="text/css">
-            .label { text-align: right}
-        </style>
+        <link rel="stylesheet" href="/css/style.css">
     </head>
 
     <body>
-
-        <form method="post">
+        <#include "/html/navigation.html">
+        <form method="get" action="/search">
             <table>
                 <tr>
                     <td class="label"> Artist Name </td>
                     <td>
-                        <input type="text" name="search_input">
+                        <input type="text" name="artist_name">
                     </td>
                 </tr>
             </table>
-            <input type="submit">
+            <input type="submit" value="Search artist" >
         </form>
 
     </body>
