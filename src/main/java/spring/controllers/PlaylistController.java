@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import spring.services.MongoService;
 
@@ -15,19 +16,19 @@ import java.util.List;
 import java.util.Set;
 
 @Controller
-@SuppressWarnings("unchecked")
+@RequestMapping("/playlist")
 public class PlaylistController {
     @Autowired
     private MongoService service;
 
-    @GetMapping("/playlist")
+    @GetMapping("")
     public String playlist(){
         return "/html/playlistform.html";
     }
 
-    @PostMapping("/playlist")
+    @PostMapping("")
     public String artistsSearchPost(Model model, @RequestParam String artist_input, @RequestParam String genre_input,
-                                    @RequestParam String hour_input, @RequestParam String minute_input,
+                                    @RequestParam(defaultValue = "1") String hour_input, @RequestParam(defaultValue = "0") String minute_input,
                                     @RequestParam(required = false) String explicit_input){
 
         Set<String> artists = new HashSet<>(Arrays.asList(artist_input.split(",")));

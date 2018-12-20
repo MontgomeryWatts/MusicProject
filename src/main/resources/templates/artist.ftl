@@ -30,7 +30,9 @@
                     <tr>
                         <td rowspan="3">
                             <a href="/artists/${artist["_id"]["uri"]}/${album["uri"]}">
-                                <img src="${album["image"]}" class="album-image">
+                                <#if album["image"]??>
+                                    <img src="${album["image"]}" class="album-image">
+                                </#if>
                             </a>
                         </td>
                         <td>

@@ -59,8 +59,10 @@ public class DatabaseQueries {
 
 
     public static List<Document> getArtistsByRandom(MongoCollection<Document> artistCollection){
-        return artistCollection.aggregate(Collections.singletonList(
-                sample(SAMPLE_SIZE)
+        return artistCollection.aggregate(Arrays.asList(
+                sample(SAMPLE_SIZE * 10),
+                match( exists("_id.image")),
+                limit(SAMPLE_SIZE)
         )).into(new ArrayList<>());
     }
 

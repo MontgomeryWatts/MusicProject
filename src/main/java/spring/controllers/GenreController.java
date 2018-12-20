@@ -6,18 +6,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import spring.services.MongoService;
 
 import java.util.List;
 
 @Controller
+@RequestMapping("/genres")
 public class GenreController {
 
     @Autowired
     private MongoService service;
 
-    @GetMapping("/genres")
+    @GetMapping("")
     public String genres(Model model, @RequestParam(name = "letter", required = false) String letter){
         List<String> genres;
         if (letter != null){
@@ -30,7 +32,7 @@ public class GenreController {
         return "genres";
     }
 
-    @GetMapping("/genres/{genre}")
+    @GetMapping("/{genre}")
     public String genre(Model model, @PathVariable String genre, @RequestParam(name = "p", required = false, defaultValue = "1") String page_number){
         int number = 1;
         if (page_number.matches("\\d+"))

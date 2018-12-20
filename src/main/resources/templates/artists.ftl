@@ -10,15 +10,14 @@
         <#if artists?has_content>
             <#list artists as artist>
                 <#if artist["_id"]["image"]??>
-                    <div>
-                        <a href="/artists/${artist["_id"]["uri"]}">
-                            <img src="${artist["_id"]["image"]}" class="artist-preview">
-                        </a>
-                        <span>&nbsp;</span>
-                        <a href="spotify:artist:${artist["_id"]["uri"]}">
-                            ${artist["_id"]["name"]}
-                        </a>
-                    </div>
+                    <a href="/artists/${artist["_id"]["uri"]}">
+                        <img src="${artist["_id"]["image"]}" class="artist-preview">
+                    </a>
+                    <span>&nbsp;</span>
+                    <a href="spotify:artist:${artist["_id"]["uri"]}">
+                        ${artist["_id"]["name"]}
+                    </a>
+                    <br>
                 </#if>
             </#list>
         <#else>

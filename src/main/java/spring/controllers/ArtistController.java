@@ -4,22 +4,20 @@ import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import spring.services.MongoService;
 
 
 import java.util.List;
 
 @Controller
+@RequestMapping("/artists")
 public class ArtistController {
 
     @Autowired
     private MongoService service;
 
-    @GetMapping("/artists")
+    @GetMapping("")
     public String artists(Model model){
         if(!model.containsAttribute("artists")) {
             List<Document> artists = service.getArtists();
@@ -28,21 +26,21 @@ public class ArtistController {
         return "artists";
     }
 
-    @GetMapping("/artists/{artistUri}/{albumUri}")
+    @GetMapping("/{artistUri}/{albumUri}")
     public String artistsUri(Model model, @PathVariable String artistUri, @PathVariable String albumUri){
         Document album = service.getAlbum(artistUri, albumUri);
         model.addAttribute("album", album);
         return "album";
     }
 
-    @GetMapping("/artists/{uri}")
+    @GetMapping("/{uri}")
     public String artistsUri(Model model, @PathVariable String uri){
         Document artist = service.getArtist(uri);
         model.addAttribute("artist", artist);
         return "artist";
     }
 
-    @GetMapping("/artists/search")
+    @GetMapping("/search")
     public String artistsSearchGet(){
         return "search";
     }
