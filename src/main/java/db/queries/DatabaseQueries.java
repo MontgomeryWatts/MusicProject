@@ -3,6 +3,7 @@ package db.queries;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.*;
 
@@ -160,28 +161,45 @@ public class DatabaseQueries {
     }
 
     public static List<Document> getAllSongsByCriteria(MongoCollection<Document> artistCollection, Set<String> artists, Set<String> genres,
-                                                    boolean onlyExplicit, int startYear, int endYear){
+                                                    boolean allowExplicit, int startYear, int endYear){
+
+        List<Bson> aggregatePipeline = new ArrayList<>();
+
+        //If the user provided artist or genre criteria
+        if(artists.size() + genres.size() != 0) {
+            aggregatePipeline.add(match(or(in("genres", genres), in("_id.name", artists))));
+        }
+        else{
+            aggregatePipeline.add(sample(SAMPLE_SIZE));
+        }
+
+        aggregatePipeline.add(unwind("$albums"));
+
+        //If the user wants to filter explicit songs
+        if(!allowExplicit) {
+            aggregatePipeline.add(match(eq("albums.is_explicit", allowExplicit)));
+            System.out.println("user does not want explicit songs");
+        }
 
         //The driver won't let me make the _id field a document when using Aggregates.group
         //Have to make an ugly document like this to do what I want
         Document groupDoc = new Document("$group",
                 new Document ("_id", new Document("uri", "$albums.songs.uri")
-                    .append("title", "$albums.songs.title")
-                    .append("artist", "$_id.name")
-                    .append("duration", "$albums.songs.duration")) );
+                        .append("title", "$albums.songs.title")
+                        .append("artist", "$_id.name")
+                        .append("duration", "$albums.songs.duration")) );
 
-        return artistCollection.aggregate(
+        aggregatePipeline.addAll(
                 Arrays.asList(
-                        match( or( in("genres", genres), in("_id.name", artists) )),
-                        unwind("$albums"),
-                        match( and( eq("albums.is_explicit", onlyExplicit),
-                                and( gte("albums.year", startYear), lte("albums.year", endYear)))) ,
-                        unwind("$albums.songs"),
-                        project(include("albums.songs")),
-                        groupDoc,
-                        replaceRoot("$_id")
+                    match(and( gte("albums.year", startYear), lte("albums.year", endYear))),
+                    unwind("$albums.songs"),
+                    project(include("albums.songs")),
+                    groupDoc,
+                    replaceRoot("$_id")
                 )
-        ).into( new ArrayList<>());
+        );
+
+        return artistCollection.aggregate(aggregatePipeline).into( new ArrayList<>());
     }
 
     public static Set<Document> getSongsFeaturedOn(MongoCollection<Document> artistCollection, String artistId){

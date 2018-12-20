@@ -3,7 +3,7 @@
     <head>
         <title>Displays a searched artist's albums</title>
         <link rel="stylesheet" href="/css/style.css">
-        <script src="/js/checkNotEmpty.js"></script>
+        <script src="/js/formValidation.js"></script>
     </head>
 
     <body>
@@ -17,7 +17,7 @@
                     </td>
                 </tr>
             </table>
-            <input type="submit" value="Search Artists" onclick="return checkNotEmpty('artist_input')" >
+            <input type="submit" value="Search Artists" onclick="return notEmpty('artist_input')" >
         </form>
 
 

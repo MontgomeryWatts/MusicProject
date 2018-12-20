@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Playlist</title>
+    <script src="/js/formValidation.js"></script>
 </head>
 <body>
     <form method="post">
@@ -22,10 +23,10 @@
             <tr>
                 <td class="label"> Length </td>
                 <td>
-                    <input type="text" placeholder="hours" name="hour_input">
+                    <input type="text" placeholder="hours" name="hour_input" id="hour_input">
                 </td>
                 <td>
-                    <input type="text" placeholder="minutes" name="minute_input">
+                    <input type="text" placeholder="minutes" name="minute_input" id="minute_input">
                 </td>
             </tr>
             <tr>
@@ -35,7 +36,7 @@
                 </td>
             </tr>
         </table>
-        <input type="submit" value="Create Playlist">
+        <input type="submit" value="Create Playlist" onclick="return isInteger('hour_input') && isInteger('minute_input')">
     </form>
 </body>
 </html>
