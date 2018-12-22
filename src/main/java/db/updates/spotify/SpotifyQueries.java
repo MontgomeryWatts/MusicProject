@@ -210,6 +210,61 @@ public class SpotifyQueries {
         return new Album[0];
     }
 
+    public static void main(String[] args) {
+        String id = "1SHuwxHlrs4sxReozrn80W";
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(id)
+                .market(CountryCode.US)
+                .album_type("album,single")
+                .limit(1) //50 is the max that may be returned
+                .build();
+
+        List<String> albums = getAlbumIdsTwo(spotifyApi, id);
+        System.out.println(albums.size());
+        for(String s: albums)
+            System.out.println(s);
+    }
+
+    private static List<String> getAlbumIdsTwo(SpotifyApi spotifyApi, String artistId){
+
+        ArrayList<String> albumIds = new ArrayList<>();
+        int offset = 0;
+        int itemsAdded = 0;
+        int idsToAdd = Integer.MAX_VALUE;
+        int failedAttempts = 0;
+        Paging<AlbumSimplified> albumsPaging;
+
+        //While all album Ids have not been added and there have not been 10 failed attempts
+        while( (idsToAdd - itemsAdded != 0) && (failedAttempts != 10) ){
+            final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistId)
+                    .market(CountryCode.US)
+                    .album_type("album,single")
+                    .limit(50) //50 is the max that may be returned
+                    .offset(offset)
+                    .build();
+            try{
+                albumsPaging = albumsRequest.execute();
+
+
+                if(albumsPaging != null){
+                    offset += 50;
+                    idsToAdd = albumsPaging.getTotal();
+                    for(AlbumSimplified a: albumsPaging.getItems())
+                        albumIds.add(a.getName());
+                    itemsAdded = albumIds.size();
+                }
+            } catch (Exception e){
+                failedAttempts++;
+                try{
+                    Thread.sleep(5000);
+                } catch (InterruptedException ie){
+                    System.err.println("please don't happen..");
+                }
+            }
+        }
+        return albumIds;
+    }
+
     /**
      * Returns a Set containing all of the Spotify ids of the given artist's albums
      * @param spotifyApi A SpotifyAPI Object to generate requests
@@ -223,6 +278,7 @@ public class SpotifyQueries {
         final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistID)
                 .market(CountryCode.US)
                 .album_type("album,single")
+                .limit(50) //50 is the max that may be returned
                 .build();
         try {
             Paging<AlbumSimplified> albums = albumsRequest.execute();
@@ -291,6 +347,7 @@ public class SpotifyQueries {
         catch (Exception e){
             e.printStackTrace();
         }
+
         return new Paging.Builder<Artist>().build();
     }
 

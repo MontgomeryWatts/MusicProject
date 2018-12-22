@@ -90,7 +90,7 @@ public class DatabaseQueries {
      * Retrieves an artist's document from the artists collection, performing a case-insensitive text search
      * searching for an exact match on the given artist name. It is necessary to have a text index on the _id field
      * for this method to not throw an exception. This can be performed in the MongoDB shell by entering
-     * db.artists.createIndex({'_id.name':"text"})
+     * db.artists.createIndex({'_id.name':"text"}, {default_language:"none"})
      * @param artistCollection The MongoCollection containing artist Documents
      * @param artistName The name of the artist whose document we are attempting to retrieve
      * @return The first Document whose _id contains keywords in the searchPhrase, or null.
@@ -178,7 +178,6 @@ public class DatabaseQueries {
         //If the user wants to filter explicit songs
         if(!allowExplicit) {
             aggregatePipeline.add(match(eq("albums.is_explicit", allowExplicit)));
-            System.out.println("user does not want explicit songs");
         }
 
         //The driver won't let me make the _id field a document when using Aggregates.group
