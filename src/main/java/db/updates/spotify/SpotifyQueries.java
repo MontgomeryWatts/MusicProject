@@ -28,6 +28,7 @@ import java.util.*;
 import static com.mongodb.client.model.Filters.*;
 
 public class SpotifyQueries {
+    private static final int MAX_ATTEMPTS = 10;
 
     static void addArtistById(MongoCollection<Document> artistCollection, String artistId) {
         //Don't bother doing anything if the document already exists
@@ -176,56 +177,42 @@ public class SpotifyQueries {
     }
 
     private static Album[] getAlbums(SpotifyApi spotifyApi, List<String> ids){
-        String[] idArray = ids.toArray(new String[0]);
-        if (idArray.length == 0)
+        int albumsToGet = ids.size();
+        if(albumsToGet == 0)
             return new Album[0];
+        int failedAttempts = 0;
+        int startIndex = 0;
+        int endIndex = (albumsToGet - startIndex > 20) ? startIndex + 20 : startIndex + (albumsToGet - startIndex);
+        List<Album> albums = new ArrayList<>();
 
-        GetSeveralAlbumsRequest request = spotifyApi.getSeveralAlbums(idArray)
-                .market(CountryCode.US)
-                .build();
-        try {
-            return request.execute();
-        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
-
-            int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in getAlbums, waiting for " + wait + " milliseconds");
+        while( (albumsToGet != 0) && (failedAttempts != MAX_ATTEMPTS) ){
             try{
-                Thread.sleep(wait);
-            } catch (InterruptedException ie){
-                ie.printStackTrace();
-            }
-            return getAlbums(spotifyApi, ids);
+                String[] idArray = ids.subList(startIndex, endIndex).toArray(new String[0]); //make sure inbounds
+                GetSeveralAlbumsRequest request = spotifyApi.getSeveralAlbums(idArray)
+                        .market(CountryCode.US)
+                        .build();
+                Album[] albumArray = request.execute();
+                if(albumArray != null){
+                    startIndex += 20;
+                    endIndex = (ids.size() - startIndex > 20) ? startIndex + 20 : startIndex + (ids.size() - startIndex);
+                    albums.addAll( Arrays.asList(albumArray) );
+                    albumsToGet -= albumArray.length;
+                }
 
-        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
-            try{
-                Thread.sleep(5000);
-            } catch (InterruptedException ie)
-            {
-                ie.printStackTrace();
+            } catch(Exception e) {
+                e.printStackTrace();
+                failedAttempts++;
+                try{
+                    Thread.sleep(5000);
+                } catch (InterruptedException ie){
+                    System.err.println("please don't happen..");
+                }
             }
-            return getAlbums(spotifyApi, ids);
-        } catch (Exception e){
-            e.printStackTrace();
         }
-        return new Album[0];
+        return albums.toArray(new Album[0]);
     }
 
-    public static void main(String[] args) {
-        String id = "1SHuwxHlrs4sxReozrn80W";
-        SpotifyApi spotifyApi = createSpotifyAPI();
-        final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(id)
-                .market(CountryCode.US)
-                .album_type("album,single")
-                .limit(1) //50 is the max that may be returned
-                .build();
-
-        List<String> albums = getAlbumIdsTwo(spotifyApi, id);
-        System.out.println(albums.size());
-        for(String s: albums)
-            System.out.println(s);
-    }
-
-    private static List<String> getAlbumIdsTwo(SpotifyApi spotifyApi, String artistId){
+    private static List<String> getAlbumIds(SpotifyApi spotifyApi, String artistId){
 
         ArrayList<String> albumIds = new ArrayList<>();
         int offset = 0;
@@ -235,7 +222,7 @@ public class SpotifyQueries {
         Paging<AlbumSimplified> albumsPaging;
 
         //While all album Ids have not been added and there have not been 10 failed attempts
-        while( (idsToAdd - itemsAdded != 0) && (failedAttempts != 10) ){
+        while( (idsToAdd - itemsAdded != 0) && (failedAttempts != MAX_ATTEMPTS) ){
             final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistId)
                     .market(CountryCode.US)
                     .album_type("album,single")
@@ -250,7 +237,7 @@ public class SpotifyQueries {
                     offset += 50;
                     idsToAdd = albumsPaging.getTotal();
                     for(AlbumSimplified a: albumsPaging.getItems())
-                        albumIds.add(a.getName());
+                        albumIds.add(a.getId());
                     itemsAdded = albumIds.size();
                 }
             } catch (Exception e){
@@ -262,51 +249,6 @@ public class SpotifyQueries {
                 }
             }
         }
-        return albumIds;
-    }
-
-    /**
-     * Returns a Set containing all of the Spotify ids of the given artist's albums
-     * @param spotifyApi A SpotifyAPI Object to generate requests
-     * @param artistID The ID of the artist in Spotify's URI
-     * @return a Set containing all of the Spotify ids of the given artist's albums
-     */
-
-    private static List<String> getAlbumIds(SpotifyApi spotifyApi, String artistID){
-        List<String> albumIds = new ArrayList<>();
-
-        final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistID)
-                .market(CountryCode.US)
-                .album_type("album,single")
-                .limit(50) //50 is the max that may be returned
-                .build();
-        try {
-            Paging<AlbumSimplified> albums = albumsRequest.execute();
-            for(AlbumSimplified album : albums.getItems()){
-                albumIds.add(album.getId());
-            }
-        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
-
-            int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in getAlbumIds, waiting for " + wait + " milliseconds");
-            try{
-                Thread.sleep(wait);
-            } catch (InterruptedException ie){
-                ie.printStackTrace();
-            }
-            return getAlbumIds(spotifyApi, artistID);
-        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
-            try{
-                Thread.sleep(5000);
-            } catch (InterruptedException ie)
-            {
-                ie.printStackTrace();
-            }
-            return getAlbumIds(spotifyApi, artistID);
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
         return albumIds;
     }
 
@@ -399,6 +341,7 @@ public class SpotifyQueries {
 
     private static boolean insertArtist(SpotifyApi spotifyApi, MongoCollection<Document> artistCollection, Artist artist){
         String artistName = artist.getName();
+        System.out.println("attempting to insert a document for " + artistName);
         String spotifyId = artist.getId();
         Document idDoc = new Document("name", artistName)
                 .append("uri", spotifyId);
@@ -418,8 +361,9 @@ public class SpotifyQueries {
                     .append("year", year);
 
             Image[] albumImages = album.getImages();
-            if(albumImages.length != 0)
+            if(albumImages.length != 0) {
                 albumDoc.append("image", albumImages[0].getUrl());
+            }
 
             List<Document> songDocuments = new ArrayList<>();
             boolean explicit = false;
