@@ -29,6 +29,7 @@ import static com.mongodb.client.model.Filters.*;
 
 public class SpotifyQueries {
     private static final int MAX_ATTEMPTS = 10;
+    private static final int WAIT_TIME = 5000;
 
     static void addArtistById(MongoCollection<Document> artistCollection, String artistId) {
         //Don't bother doing anything if the document already exists
@@ -200,10 +201,9 @@ public class SpotifyQueries {
                 }
 
             } catch(Exception e) {
-                e.printStackTrace();
                 failedAttempts++;
                 try{
-                    Thread.sleep(5000);
+                    Thread.sleep(WAIT_TIME);
                 } catch (InterruptedException ie){
                     System.err.println("please don't happen..");
                 }
@@ -243,7 +243,7 @@ public class SpotifyQueries {
             } catch (Exception e){
                 failedAttempts++;
                 try{
-                    Thread.sleep(5000);
+                    Thread.sleep(WAIT_TIME);
                 } catch (InterruptedException ie){
                     System.err.println("please don't happen..");
                 }
@@ -347,8 +347,12 @@ public class SpotifyQueries {
                 .append("uri", spotifyId);
 
         Image[] artistImages = artist.getImages();
-        if(artistImages.length != 0)
-            idDoc.append("image", artistImages[0].getUrl());
+        if(artistImages.length != 0) {
+            List<String> imageUrls = new ArrayList<>();
+            for(Image image: artistImages)
+                imageUrls.add(image.getUrl());
+            idDoc.append("image", imageUrls);
+        }
 
         List<String> genres = Arrays.asList(artist.getGenres());
         List<String> albumIds = getAlbumIds(spotifyApi, spotifyId);
