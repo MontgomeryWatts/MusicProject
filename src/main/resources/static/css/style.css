@@ -4,19 +4,13 @@ a{
 }
 
 body{
-    color: white;
     background: #10171E;
+    padding-top: 50px;
+    color: white;
 }
 
-li{
-    margin-left: 2px;
-    margin-right: 2px;
-}
-
-ul{
-    display: flex;
-    list-style: none;
-    padding-left: 0;
+input{
+    color: black;
 }
 
 .artist-preview{
@@ -30,8 +24,6 @@ ul{
 .album-image{
     height: 200px;
     width: 200px;
-    vertical-align: text-top;
-    margin: 5px 0 5px 0;
 }
 
 .label { text-align: right}

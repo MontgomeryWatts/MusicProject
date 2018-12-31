@@ -26,13 +26,6 @@ public class ArtistController {
         return "artists";
     }
 
-    @GetMapping("/{artistUri}/{albumUri}")
-    public String artistsUri(Model model, @PathVariable String artistUri, @PathVariable String albumUri){
-        Document album = service.getAlbum(artistUri, albumUri);
-        model.addAttribute("album", album);
-        return "album";
-    }
-
     @GetMapping("/{uri}")
     public String artistsUri(Model model, @PathVariable String uri){
         Document artist = service.getArtist(uri);

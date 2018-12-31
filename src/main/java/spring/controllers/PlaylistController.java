@@ -28,7 +28,7 @@ public class PlaylistController {
 
     @PostMapping("")
     public String artistsSearchPost(Model model, @RequestParam String artist_input, @RequestParam String genre_input,
-                                    @RequestParam(defaultValue = "1") String hour_input, @RequestParam(defaultValue = "0") String minute_input,
+                                    @RequestParam(defaultValue = "2") String hour_input, @RequestParam(defaultValue = "0") String minute_input,
                                     @RequestParam(required = false) String explicit_input){
 
         Set<String> artists = new HashSet<>();

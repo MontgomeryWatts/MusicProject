@@ -14,8 +14,8 @@ import static com.mongodb.client.model.Projections.*;
 
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
-    private static final int SAMPLE_SIZE = 25;
-
+    private static final int SMALL_SAMPLE_SIZE = 25;
+    private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
 
     public static List<Document> createPlaylist(List<Document> potentialSongs, int duration){
         List<Document> playlistDocs = new ArrayList<>();
@@ -47,13 +47,13 @@ public class DatabaseQueries {
     public static List<Document> getArtistsByGenre(MongoCollection<Document> artistCollection, String genre, int skip){
         return artistCollection.aggregate(Arrays.asList(
                 match( eq("genres", genre)),
-                skip(SAMPLE_SIZE * (skip-1) ),
-                limit(SAMPLE_SIZE)
+                skip(SMALL_SAMPLE_SIZE * (skip-1) ),
+                limit(SMALL_SAMPLE_SIZE)
         )).into(new ArrayList<>());
     }
 
     public static List<Document> getArtistsByName(MongoCollection<Document> artistCollection, String artistName){
-        String searchPhrase = "\"" + artistName + "\"";
+        String searchPhrase = "\"" + artistName.trim() + "\"";
         Document filter = new Document("$text", new Document("$search", searchPhrase));
         return  artistCollection.find(filter).into(new ArrayList<>());
     }
@@ -61,9 +61,9 @@ public class DatabaseQueries {
 
     public static List<Document> getArtistsByRandom(MongoCollection<Document> artistCollection){
         return artistCollection.aggregate(Arrays.asList(
-                sample(SAMPLE_SIZE * 10),
+                sample(LARGE_SAMPLE_SIZE),
                 match( exists("_id.image")),
-                limit(SAMPLE_SIZE)
+                limit(SMALL_SAMPLE_SIZE)
         )).into(new ArrayList<>());
     }
 
@@ -141,7 +141,7 @@ public class DatabaseQueries {
         Document genresDoc = artistCollection.aggregate(Arrays.asList(
                 unwind("$genres"),
                 group("$genres"),
-                sample(SAMPLE_SIZE),
+                sample(SMALL_SAMPLE_SIZE),
                 group( null, addToSet("genres","$_id"))
         )).first();
         return (ArrayList<String>)genresDoc.get("genres");
@@ -170,7 +170,7 @@ public class DatabaseQueries {
             aggregatePipeline.add(match(or(in("genres", genres), in("_id.name", artists))));
         }
         else{
-            aggregatePipeline.add(sample(SAMPLE_SIZE));
+            aggregatePipeline.add(sample(LARGE_SAMPLE_SIZE));
         }
 
         aggregatePipeline.add(unwind("$albums"));

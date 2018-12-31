@@ -19,9 +19,9 @@ import static spark.Spark.get;
 public class GetAccessToken {
     public static void main(String[] args) {
         Configuration config = new Configuration();
-        config.setClassForTemplateLoading(DisplayAlbums.class, "/");
+        config.setClassForTemplateLoading(GetAccessToken.class, "/");
 
-        final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost");
+        final URI redirectUri = SpotifyHttpManager.makeUri("http://localhost/access");
 
 
         final SpotifyApi spotifyApi = SpotifyQueries.createSpotifyAPI(redirectUri);
@@ -35,7 +35,7 @@ public class GetAccessToken {
 
         Spark.setPort(80);
 
-        get(new Route("/"){
+        get(new Route("/access"){
             @Override
             public Object handle(Request request, Response response) {
                 StringWriter writer = new StringWriter();
