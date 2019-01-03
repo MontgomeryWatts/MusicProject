@@ -1,0 +1,1 @@
+web: java -jar target/MusicProject-1.0.jar
