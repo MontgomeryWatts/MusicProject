@@ -33,8 +33,9 @@ public class ArtistController {
         return "artist";
     }
 
-    @GetMapping("/search")
-    public String artistsSearchGet(){
-        return "search";
+    @GetMapping("/random")
+    public String getRandom(){
+        String artistUri = service.getRandomArtistURI();
+        return "redirect:/artists/" + artistUri;
     }
 }

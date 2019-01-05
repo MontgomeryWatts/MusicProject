@@ -51,4 +51,5 @@ public class MongoService {
         return DatabaseQueries.getRandomGenres(collection);
     }
     public List<String> getGenresByLetter(char letter){ return DatabaseQueries.getGenresByLetter(collection, letter);}
+    public String getRandomArtistURI(){return DatabaseQueries.getRandomArtistURI(collection);}
 }
