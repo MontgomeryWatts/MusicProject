@@ -15,8 +15,8 @@
         <div class="container">
             <#if artist??>
                 <h1>${artist["_id"]["name"]}</h1>
-            <#if artist["_id"]["image"]??>
-                <img src="${artist["_id"]["image"]}" class="artist-preview">
+            <#if artist["_id"]["image"]?has_content>
+                <img src="${artist["_id"]["image"][1]}" class="artist-preview">
             </#if>
                 <br>
                 <br>

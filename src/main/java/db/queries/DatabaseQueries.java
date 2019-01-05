@@ -1,5 +1,6 @@
 package db.queries;
 
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
 import org.bson.Document;
@@ -16,6 +17,11 @@ import static com.mongodb.client.model.Projections.*;
 public class DatabaseQueries {
     private static final int SMALL_SAMPLE_SIZE = 25;
     private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
+
+    public static MongoClientURI getMongoClientUri(){
+        String envVariable = System.getenv("MONGODB_URI");
+        return (envVariable != null) ? new MongoClientURI(envVariable) : new MongoClientURI("mongodb://localhost:27017/spotifydb");
+    }
 
     public static List<Document> createPlaylist(List<Document> potentialSongs, int duration){
         List<Document> playlistDocs = new ArrayList<>();

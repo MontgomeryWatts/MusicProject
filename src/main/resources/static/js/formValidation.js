@@ -1,8 +1,8 @@
 function notEmpty(id){
     if(id){
-        const element = document.getElementById(id);
+        var element = document.getElementById(id);
         if(element) {
-            const input = (element.value != null) ? element.value : "";
+            var input = (element.value != null) ? element.value : "";
             if (!input) {
                 alert("Please enter something into the " + element.name + " field.");
                 return false;
@@ -15,7 +15,7 @@ function notEmpty(id){
 
 function isInteger(id){
     if(id){
-        const element = document.getElementById(id);
+        var element = document.getElementById(id);
         if(element) {
             if(isNaN(element.value)) {
                 if (element.value) {

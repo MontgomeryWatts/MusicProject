@@ -15,9 +15,9 @@
         <div class="container">
              <#if artists?has_content>
             <#list artists as artist>
-                <#if artist["_id"]["image"]??>
+                <#if artist["_id"]["image"]?has_content>
                     <a href="/artists/${artist["_id"]["uri"]}">
-                        <img src="${artist["_id"]["image"]}" class="artist-preview">
+                        <img src="${artist["_id"]["image"][1]}" class="artist-preview">
                     </a>
                     <span>&nbsp;</span>
                     <a href="spotify:artist:${artist["_id"]["uri"]}">

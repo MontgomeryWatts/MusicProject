@@ -1,14 +1,13 @@
 package spring.services;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import db.Helpers;
 import db.queries.DatabaseQueries;
 import org.bson.Document;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -18,8 +17,9 @@ public class MongoService {
     private MongoCollection<Document> collection;
 
     public MongoService(){
-        MongoClient client = new MongoClient();
-        MongoDatabase db = client.getDatabase("music");
+        MongoClientURI uri = DatabaseQueries.getMongoClientUri();
+        MongoClient client = new MongoClient(uri);
+        MongoDatabase db = client.getDatabase(uri.getDatabase());
         collection = db.getCollection("artists");
     }
 
