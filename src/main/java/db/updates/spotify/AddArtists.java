@@ -1,8 +1,10 @@
 package db.updates.spotify;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import db.queries.DatabaseQueries;
 import org.bson.Document;
 
 import java.io.File;
@@ -16,8 +18,9 @@ import static db.updates.spotify.SpotifyQueries.*;
 public class AddArtists {
 
     public static void main(String[] args) {
-        MongoClient client = new MongoClient();
-        MongoDatabase db = client.getDatabase("music");
+        MongoClientURI uri = DatabaseQueries.getMongoClientUri();
+        MongoClient client = new MongoClient(uri);
+        MongoDatabase db = client.getDatabase(uri.getDatabase());
         MongoCollection<Document> artistsCollection = db.getCollection("artists");
 
         String path = "src/main/resources/artistNames.txt";

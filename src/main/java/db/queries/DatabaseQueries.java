@@ -15,7 +15,7 @@ import static com.mongodb.client.model.Projections.*;
 
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
-    private static final int SMALL_SAMPLE_SIZE = 25;
+    private static final int SMALL_SAMPLE_SIZE = 20;
     private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
 
     public static MongoClientURI getMongoClientUri(){
@@ -77,7 +77,6 @@ public class DatabaseQueries {
     public static List<Document> getArtistsByRandom(MongoCollection<Document> artistCollection){
         return artistCollection.aggregate(Arrays.asList(
                 sample(LARGE_SAMPLE_SIZE),
-                match( exists("_id.image.0")),
                 limit(SMALL_SAMPLE_SIZE)
         )).into(new ArrayList<>());
     }
@@ -134,7 +133,6 @@ public class DatabaseQueries {
     public static String getRandomArtistURI(MongoCollection<Document> artistCollection){
         Document randomArtistDoc = artistCollection.aggregate(Arrays.asList(
                 sample(SMALL_SAMPLE_SIZE),
-                match( and( exists("_id.image.0") , exists("albums.0"))),
                 project(Projections.include("_id"))
         )).first();
         return ((Document)randomArtistDoc.get("_id")).getString("uri");

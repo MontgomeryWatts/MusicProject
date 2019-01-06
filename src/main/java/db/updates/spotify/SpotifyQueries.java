@@ -29,7 +29,7 @@ import static com.mongodb.client.model.Filters.*;
 
 public class SpotifyQueries {
     private static final int MAX_ATTEMPTS = 10;
-    private static final int WAIT_TIME = 5000;
+    private static final int WAIT_TIME = 2000;
 
     static void addArtistById(MongoCollection<Document> artistCollection, String artistId) {
         //Don't bother doing anything if the document already exists
@@ -347,16 +347,21 @@ public class SpotifyQueries {
                 .append("uri", spotifyId);
 
         Image[] artistImages = artist.getImages();
-        if(artistImages.length != 0) {
-            List<String> imageUrls = new ArrayList<>();
-            for(Image image: artistImages)
-                imageUrls.add(image.getUrl());
-            idDoc.append("image", imageUrls);
-        }
+        if(artistImages.length == 0)
+            return false;
+
+        List<String> imageUrls = new ArrayList<>();
+        for(Image image: artistImages)
+            imageUrls.add(image.getUrl());
+        idDoc.append("image", imageUrls);
 
         List<String> genres = Arrays.asList(artist.getGenres());
         List<String> albumIds = getAlbumIds(spotifyApi, spotifyId);
         Album[] albums = getAlbums(spotifyApi, albumIds);
+
+        if(albums.length == 0)
+            return false;
+
         List<Document> albumDocuments = new ArrayList<>();
         for(Album album: albums){
             int year = Integer.parseInt(album.getReleaseDate().substring(0, 4));
