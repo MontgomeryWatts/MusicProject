@@ -134,7 +134,7 @@ public class DatabaseQueries {
     public static String getRandomArtistURI(MongoCollection<Document> artistCollection){
         Document randomArtistDoc = artistCollection.aggregate(Arrays.asList(
                 sample(SMALL_SAMPLE_SIZE),
-                match(exists("_id.image.0")),
+                match( and( exists("_id.image.0") , exists("albums.0"))),
                 project(Projections.include("_id"))
         )).first();
         return ((Document)randomArtistDoc.get("_id")).getString("uri");

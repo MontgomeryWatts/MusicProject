@@ -14,10 +14,17 @@
         <#include "/html/navigation.html">
         <div class="container">
             <#if genres?has_content>
-            <#list genres as genre>
-                <a href="/genres/${genre}?p=1" >${genre}</a>
-                <br>
-            </#list>
+                <#list genres?chunk(4) as row>
+                <div class="row">
+                    <#list row as genre>
+                            <div class="col-md-3">
+                                <a href="/genres/${genre}?p=1">
+                                    ${genre}
+                                </a>
+                            </div>
+                    </#list>
+                </div>
+                </#list>
             <#else>
             <h1>
                 NO GENRES FOUND

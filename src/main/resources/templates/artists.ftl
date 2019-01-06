@@ -14,17 +14,22 @@
         <#include "/html/navigation.html">
         <div class="container">
              <#if artists?has_content>
-            <#list artists as artist>
-                <#if artist["_id"]["image"]?has_content>
-                    <a href="/artists/${artist["_id"]["uri"]}">
-                        <img src="${artist["_id"]["image"][1]}" class="artist-preview">
-                    </a>
-                    <span>&nbsp;</span>
-                    <a href="spotify:artist:${artist["_id"]["uri"]}">
-                        ${artist["_id"]["name"]}
-                    </a>
-                    <br>
-                </#if>
+            <#list artists?chunk(2) as row>
+                <div class="row">
+                <#list row as artist>
+                    <#if artist["_id"]["image"]?has_content>
+                    <div class="col-md-6 no-text-overflow">
+                        <a href="/artists/${artist["_id"]["uri"]}">
+                            <img src="${artist["_id"]["image"][1]}" class="artist-preview">
+                        </a>
+                        <span>&nbsp;</span>
+                        <a href="spotify:artist:${artist["_id"]["uri"]}">
+                            ${artist["_id"]["name"]}
+                        </a>
+                    </div>
+                    </#if>
+                </#list>
+                </div>
             </#list>
              <#else>
             <h1>
