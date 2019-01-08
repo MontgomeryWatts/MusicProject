@@ -19,18 +19,33 @@
                 <#list row as artist>
                     <#if artist["_id"]["image"]?has_content>
                     <div class="col-md-6 no-text-overflow">
-                        <a href="/artists/${artist["_id"]["uri"]}">
-                            <img src="${artist["_id"]["image"][1]}" class="artist-preview">
-                        </a>
-                        <span>&nbsp;</span>
-                        <a href="spotify:artist:${artist["_id"]["uri"]}">
-                            ${artist["_id"]["name"]}
-                        </a>
+                        <div class="container-fluid">
+                            <a href="/artists/${artist["_id"]["uri"]}">
+                                <img src="${artist["_id"]["image"][1]}" class="artist-preview">
+                            </a>
+                            <span>&nbsp;</span>
+                            <a href="spotify:artist:${artist["_id"]["uri"]}">
+                                ${artist["_id"]["name"]}
+                            </a>
+                        </div>
                     </div>
                     </#if>
                 </#list>
                 </div>
             </#list>
+                 <nav>
+                     <ul class="pager">
+                         <#if RequestParameters.p??>
+                             <#if RequestParameters.p?number gte 2>
+                            <li class="previous"><a style="color:black" href="${prevLink}"><span>←  </span>Previous</a></li>
+                             </#if>
+                         </#if>
+
+                         <#if hasNext??>
+                            <li class="next"><a style="color:black" href="${nextLink}">Next<span>  →</span></a></li>
+                         </#if>
+                     </ul>
+                 </nav>
              <#else>
             <h1>
                 NO ARTISTS FOUND

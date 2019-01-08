@@ -32,9 +32,6 @@ public class MongoService {
 
     }
 
-    public Document getAlbum(String artistUri, String albumUri){
-        return DatabaseQueries.getAlbum(collection, artistUri, albumUri);
-    }
     public Document getArtist(String uri){
         return DatabaseQueries.getArtist(collection, uri);
     }
@@ -51,5 +48,8 @@ public class MongoService {
         return DatabaseQueries.getRandomGenres(collection);
     }
     public List<String> getGenresByLetter(char letter){ return DatabaseQueries.getGenresByLetter(collection, letter);}
+    public long getNumArtistsByGenre(String genre){
+        return DatabaseQueries.getNumArtistsByGenre(collection, genre);
+    }
     public String getRandomArtistURI(){return DatabaseQueries.getRandomArtistURI(collection);}
 }

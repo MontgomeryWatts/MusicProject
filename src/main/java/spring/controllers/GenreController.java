@@ -1,5 +1,6 @@
 package spring.controllers;
 
+import db.queries.DatabaseQueries;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -40,6 +41,15 @@ public class GenreController {
 
         List<Document> artists = service.getArtistsByGenre(genre, number);
         model.addAttribute("artists", artists);
+
+        //Used for pagination
+        String prevLink = "/genres/" + genre + "?p=" + (number-1);
+        String nextLink = "/genres/" + genre + "?p=" + (number+1);
+        model.addAttribute("prevLink", prevLink);
+        model.addAttribute("nextLink", nextLink);
+
+        if(artists.size() + (DatabaseQueries.SMALL_SAMPLE_SIZE * --number) < service.getNumArtistsByGenre(genre))
+            model.addAttribute("hasNext", true);
         return "artists";
     }
 

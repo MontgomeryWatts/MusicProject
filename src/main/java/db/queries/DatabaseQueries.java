@@ -15,7 +15,7 @@ import static com.mongodb.client.model.Projections.*;
 
 @SuppressWarnings("unchecked")
 public class DatabaseQueries {
-    private static final int SMALL_SAMPLE_SIZE = 20;
+    public static final int SMALL_SAMPLE_SIZE = 20;
     private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
 
     public static MongoClientURI getMongoClientUri(){
@@ -34,16 +34,6 @@ public class DatabaseQueries {
             }
         }
         return playlistDocs;
-    }
-
-
-    public static Document getAlbum(MongoCollection<Document> artistCollection, String artistUri, String albumUri){
-        return artistCollection.aggregate(Arrays.asList(
-                match( eq("_id.uri", artistUri) ),
-                unwind("$albums"),
-                match( eq("albums.uri", albumUri)),
-                replaceRoot("$albums")
-        )).first();
     }
 
     public static Document getArtist(MongoCollection<Document> artistCollection, String uri){
@@ -115,6 +105,10 @@ public class DatabaseQueries {
 
 
         return (genresDoc != null) ? (ArrayList<String>) genresDoc.get("genres") : new ArrayList<>();
+    }
+
+    public static long getNumArtistsByGenre(MongoCollection<Document> artistCollection, String genre){
+        return artistCollection.count(eq("genres", genre));
     }
 
     public static int getNumSongs(MongoCollection<Document> artistCollection){
@@ -202,14 +196,14 @@ public class DatabaseQueries {
         return artistCollection.aggregate(aggregatePipeline).into( new ArrayList<>());
     }
 
-    public static Set<Document> getSongsFeaturedOn(MongoCollection<Document> artistCollection, String artistId){
+    public static List<Document> getSongsFeaturedOn(MongoCollection<Document> artistCollection, String artistId){
         return artistCollection.aggregate(
                 Arrays.asList(
                         unwind("$albums"),
                         unwind("$albums.songs"),
-                        match( and( exists("albums.songs.featured"), eq("albums.songs.featured", artistId))),
+                        match( eq("albums.songs.featured", artistId)),
                         replaceRoot("$albums.songs")
                 )
-        ).into(new HashSet<>());
+        ).into(new ArrayList<>());
     }
 }
