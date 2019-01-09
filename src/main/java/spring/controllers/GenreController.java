@@ -28,7 +28,7 @@ public class GenreController {
             genres = service.getGenresByLetter(c);
         }
         else
-          genres = service.getGenres();
+          genres = service.getAllGenres();
         model.addAttribute("genres", genres);
         return "genres";
     }

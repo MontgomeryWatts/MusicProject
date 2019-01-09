@@ -36,6 +36,14 @@ public class DatabaseQueries {
         return playlistDocs;
     }
 
+    public static ArrayList<String> getAllGenres(MongoCollection<Document> artistCollection){
+        ArrayList<String> genres = artistCollection.distinct("genres", String.class)
+                .filter(new Document("genres",new Document("$ne",null)))
+                .into(new ArrayList<>());
+        Collections.sort(genres);
+        return genres;
+    }
+
     public static Document getArtist(MongoCollection<Document> artistCollection, String uri){
         return artistCollection.find( eq("_id.uri", uri)).first();
     }

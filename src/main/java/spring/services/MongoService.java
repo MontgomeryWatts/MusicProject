@@ -44,8 +44,8 @@ public class MongoService {
     public List<Document> getArtistsByName(String name){
         return DatabaseQueries.getArtistsByName(collection, name);
     }
-    public List<String> getGenres(){
-        return DatabaseQueries.getRandomGenres(collection);
+    public List<String> getAllGenres(){
+        return DatabaseQueries.getAllGenres(collection);
     }
     public List<String> getGenresByLetter(char letter){ return DatabaseQueries.getGenresByLetter(collection, letter);}
     public long getNumArtistsByGenre(String genre){
