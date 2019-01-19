@@ -13,6 +13,14 @@
     <body>
         <#include "/html/navigation.html">
         <div class="container">
+            <ul class="list-inline text-center">
+                <#list alphabet as letter>
+                    <li><a href="/genres?letter=${letter}">${letter}</a></li>
+                </#list>
+                <li><a href="/genres/">ALL</a></li>
+            </ul>
+
+
             <#if genres?has_content>
                 <#list genres?chunk(4) as row>
                 <div class="row">

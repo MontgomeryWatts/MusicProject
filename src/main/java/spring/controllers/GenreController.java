@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import spring.services.MongoService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -23,6 +24,12 @@ public class GenreController {
     @GetMapping("")
     public String genres(Model model, @RequestParam(name = "letter", required = false) String letter){
         List<String> genres;
+
+        List<Character> alphabet = new ArrayList<>();
+        for(char c = 'A'; c <= 'Z'; c++)
+            alphabet.add(c);
+        model.addAttribute("alphabet", alphabet);
+
         if (letter != null){
             char c = letter.charAt(0);
             genres = service.getGenresByLetter(c);
