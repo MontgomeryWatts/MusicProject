@@ -1,10 +1,6 @@
 package db.updates.spotify;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import db.queries.DatabaseQueries;
+import db.implementations.MongoConnection;
 import org.bson.Document;
 
 import java.io.File;
@@ -18,17 +14,17 @@ import static db.updates.spotify.SpotifyQueries.*;
 public class AddArtists {
 
     public static void main(String[] args) {
-        MongoClientURI uri = DatabaseQueries.getMongoClientUri();
-        MongoClient client = new MongoClient(uri);
-        MongoDatabase db = client.getDatabase(uri.getDatabase());
-        MongoCollection<Document> artistsCollection = db.getCollection("artists");
+        MongoConnection db = new MongoConnection();
+        System.out.println(db.getNumberOfArtists());
 
-        String path = "src/main/resources/artistNames.txt";
-        List<String> artists = getArtistNames(path);
+        List<Document> artistDocs = new ArrayList<>();
+        for(String name: getArtistNames("src/main/resources/artistNames.txt"))
+            artistDocs.addAll(getArtistDocsByName(name));
 
-        for(String artist: artists) {
-            addArtistByName(artistsCollection, artist);
-        }
+        for(Document artist: artistDocs)
+            db.insertArtist(artist);
+
+        System.out.println(db.getNumberOfArtists());
     }
     /**
      * Reads in from a file a list of artists to add to the database

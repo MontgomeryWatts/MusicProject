@@ -6,7 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import spring.services.MongoService;
+import spring.services.DatabaseService;
 
 
 @Controller
@@ -14,12 +14,14 @@ import spring.services.MongoService;
 public class SearchController {
 
     @Autowired
-    private MongoService service;
+    private DatabaseService service;
 
     @GetMapping("")
     public String searchGet(Model model, @RequestParam(name = "artist_name", required = false) String artistName){
         if (artistName != null){
-            model.addAttribute("artists", service.getArtistsByName(artistName));
+            int offset = 0;
+            int limit = Integer.MAX_VALUE;
+            model.addAttribute("artists", service.getArtistsByName(artistName, offset, limit));
             return "artists";
         }
         return "search";

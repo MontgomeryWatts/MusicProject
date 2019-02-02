@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import spring.services.MongoService;
+import spring.services.DatabaseService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.List;
 public class GenreController {
 
     @Autowired
-    private MongoService service;
+    private DatabaseService service;
 
     @GetMapping("")
     public String genres(Model model, @RequestParam(name = "letter", required = false) String letter){
@@ -42,20 +42,22 @@ public class GenreController {
 
     @GetMapping("/{genre}")
     public String genre(Model model, @PathVariable String genre, @RequestParam(name = "p", required = false, defaultValue = "1") String page_number){
-        int number = 1;
+        int page = 1;
         if (page_number.matches("\\d+"))
-            number = Integer.parseInt(page_number);
+            page = Integer.parseInt(page_number);
 
-        List<Document> artists = service.getArtistsByGenre(genre, number);
+        int offset = DatabaseQueries.SMALL_SAMPLE_SIZE * (page - 1);
+        int limit = DatabaseQueries.SMALL_SAMPLE_SIZE;
+        List<Document> artists = service.getArtistsByGenre(genre, offset, limit);
         model.addAttribute("artists", artists);
 
         //Used for pagination
-        String prevLink = "/genres/" + genre + "?p=" + (number-1);
-        String nextLink = "/genres/" + genre + "?p=" + (number+1);
+        String prevLink = "/genres/" + genre + "?p=" + (page-1);
+        String nextLink = "/genres/" + genre + "?p=" + (page+1);
         model.addAttribute("prevLink", prevLink);
         model.addAttribute("nextLink", nextLink);
 
-        if(artists.size() + (DatabaseQueries.SMALL_SAMPLE_SIZE * --number) < service.getNumArtistsByGenre(genre))
+        if(artists.size() + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
             model.addAttribute("hasNext", true);
         return "artists";
     }

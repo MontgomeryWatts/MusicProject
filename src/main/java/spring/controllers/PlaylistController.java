@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import spring.services.MongoService;
+import spring.services.DatabaseService;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,7 +19,7 @@ import java.util.Set;
 @RequestMapping("/playlist")
 public class PlaylistController {
     @Autowired
-    private MongoService service;
+    private DatabaseService service;
 
     @GetMapping("")
     public String playlist(){
