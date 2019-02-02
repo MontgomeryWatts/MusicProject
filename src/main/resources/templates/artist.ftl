@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title><#if artist??>${artist["_id"]["name"]}</#if></title>
+        <title><#if artist??>${artist["name"]}</#if></title>
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,9 +14,9 @@
         <#include "/html/navigation.html">
         <div class="container">
             <#if artist??>
-                <h1>${artist["_id"]["name"]}</h1>
-            <#if artist["_id"]["image"]?has_content>
-                <img src="${artist["_id"]["image"][1]}" class="artist-preview">
+                <h1>${artist["name"]}</h1>
+            <#if artist["images"]?has_content>
+                <img src="${artist["images"][1]}" class="artist-preview">
             </#if>
                 <br>
                 <br>

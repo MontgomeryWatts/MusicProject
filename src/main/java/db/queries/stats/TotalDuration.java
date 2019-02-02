@@ -1,10 +1,7 @@
 package db.queries.stats;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import db.queries.DatabaseQueries;
-import org.bson.Document;
+import db.implementations.DatabaseConnection;
+import db.implementations.MongoConnection;
 
 import java.text.DecimalFormat;
 
@@ -13,12 +10,9 @@ import java.text.DecimalFormat;
  */
 public class TotalDuration {
     public static void main(String[] args) {
+        DatabaseConnection db = new MongoConnection();
 
-        MongoClient client = new MongoClient();
-        MongoDatabase db = client.getDatabase("music");
-        MongoCollection<Document> artistCollection = db.getCollection("artists");
-
-        printFormattedTime(DatabaseQueries.getTotalDuration(artistCollection));
+        printFormattedTime(db.getTotalDuration());
     }
 
     private static void printFormattedTime(int seconds){

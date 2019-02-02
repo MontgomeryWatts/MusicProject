@@ -17,15 +17,15 @@
             <#list artists?chunk(2) as row>
                 <div class="row">
                 <#list row as artist>
-                    <#if artist["_id"]["image"]?has_content>
+                    <#if artist["images"]?has_content>
                     <div class="col-md-6 no-text-overflow">
                         <div class="container-fluid">
-                            <a href="/artists/${artist["_id"]["uri"]}">
-                                <img src="${artist["_id"]["image"][1]}" class="artist-preview">
+                            <a href="/artists/${artist["_id"]}">
+                                <img src="${artist["images"][1]}" class="artist-preview">
                             </a>
                             <span>&nbsp;</span>
-                            <a href="spotify:artist:${artist["_id"]["uri"]}">
-                                ${artist["_id"]["name"]}
+                            <a href="spotify:artist:${artist["_id"]}">
+                                ${artist["name"]}
                             </a>
                         </div>
                     </div>

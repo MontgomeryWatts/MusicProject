@@ -18,7 +18,6 @@ import static com.mongodb.client.model.Aggregates.skip;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
-import static com.mongodb.client.model.Projections.include;
 
 public class MongoConnection extends DatabaseConnection {
     private MongoCollection<Document> collection;
@@ -58,7 +57,7 @@ public class MongoConnection extends DatabaseConnection {
                 sample(SMALL_SAMPLE_SIZE),
                 project(Projections.include("_id"))
         )).first();
-        return ((Document)randomArtistDoc.get("_id")).getString("uri");
+        return randomArtistDoc.getString("_id");
     }
 
     @Override
@@ -92,7 +91,7 @@ public class MongoConnection extends DatabaseConnection {
 
     @Override
     public Document getArtistByUri(String artistUri) {
-        return collection.find( eq("_id.uri", artistUri)).first();
+        return collection.find( eq("_id", artistUri)).first();
     }
 
     @Override
@@ -108,7 +107,7 @@ public class MongoConnection extends DatabaseConnection {
     /**
      * Retrieves a List of artist documents from the artists collection, performing a case-insensitive text search
      * It is necessary to have a text index on the _id field for this method to not throw an exception.
-     * This can be performed in the MongoDB shell by entering db.artists.createIndex({'_id.name':"text"}, {default_language:"none"})
+     * This can be performed in the MongoDB shell by entering db.artists.createIndex({'name':"text"}, {default_language:"none"})
      * @param name The name of the artist we are searching for
      * @param offset How many artists to skip
      * @param limit How many artists to show up to
@@ -235,7 +234,7 @@ public class MongoConnection extends DatabaseConnection {
 
         //If the user provided artist or genre criteria
         if(artists.size() + genres.size() != 0) {
-            aggregatePipeline.add(match(or(in("genres", genres), in("_id.name", artists))));
+            aggregatePipeline.add(match(or(in("genres", genres), in("name", artists))));
         }
         else{
             aggregatePipeline.add(sample(LARGE_SAMPLE_SIZE)); //No artist or genre criteria, sample random artists
@@ -253,14 +252,13 @@ public class MongoConnection extends DatabaseConnection {
         Document groupDoc = new Document("$group",
                 new Document ("_id", new Document("uri", "$albums.songs.uri")
                         .append("title", "$albums.songs.title")
-                        .append("artist", "$_id.name")
+                        .append("artist", "$name")
                         .append("duration", "$albums.songs.duration")) );
 
         aggregatePipeline.addAll(
                 Arrays.asList(
                         match(and( gte("albums.year", startYear), lte("albums.year", endYear))),
                         unwind("$albums.songs"),
-                        project(include("albums.songs")),
                         groupDoc,
                         replaceRoot("$_id")
                 )
