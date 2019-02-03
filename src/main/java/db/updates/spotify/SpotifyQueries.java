@@ -1,6 +1,5 @@
 package db.updates.spotify;
 
-import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.neovisionaries.i18n.CountryCode;
 import com.wrapper.spotify.SpotifyApi;
@@ -10,6 +9,7 @@ import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
 import com.wrapper.spotify.exceptions.detailed.UnauthorizedException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
+import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysis;
 import com.wrapper.spotify.model_objects.specification.*;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRefreshRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
@@ -19,6 +19,7 @@ import com.wrapper.spotify.requests.data.artists.GetArtistsAlbumsRequest;
 import com.wrapper.spotify.requests.data.playlists.AddTracksToPlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.CreatePlaylistRequest;
 import com.wrapper.spotify.requests.data.search.simplified.SearchArtistsRequest;
+import com.wrapper.spotify.requests.data.tracks.GetAudioAnalysisForTrackRequest;
 import org.bson.Document;
 
 import java.io.File;
@@ -325,6 +326,21 @@ public class SpotifyQueries {
         return featured;
     }
 
+    private static AudioAnalysis getTrackAnalysis(SpotifyApi spotifyApi, String trackId){
+        GetAudioAnalysisForTrackRequest request = spotifyApi.getAudioAnalysisForTrack(trackId)
+                .build();
+        AudioAnalysis analysis = null;
+        int failedAttempts = 0;
+        while ((analysis == null) && (failedAttempts != MAX_ATTEMPTS)){
+            try{
+                analysis = request.execute();
+            } catch (Exception e){
+                failedAttempts++;
+            }
+        }
+        return analysis;
+    }
+
     private static Document retrieveArtistInfo(SpotifyApi spotifyApi, Artist artist){
         String artistName = artist.getName();
         String uri = artist.getId();
@@ -357,16 +373,23 @@ public class SpotifyQueries {
             }
 
             List<Document> songDocuments = new ArrayList<>();
-            boolean explicit = false;
+            boolean albumIsExplicit = false;
             for(TrackSimplified track: album.getTracks().getItems() ){
 
                 if(track.getIsExplicit())
-                    explicit = true;
-                Set<String> featured= getFeatured(uri, track);
+                    albumIsExplicit = true;
 
                 Document songDoc = new Document("title", track.getName())
                         .append("duration", track.getDurationMs() / 1000)
                         .append("uri", track.getUri());
+
+                Set<String> featured= getFeatured(uri, track);
+
+                AudioAnalysis trackAnalysis = getTrackAnalysis(spotifyApi, track.getId());
+                if(trackAnalysis != null){
+                    int bpm = Math.round(trackAnalysis.getTrack().getTempo());
+                    songDoc.append("bpm", bpm);
+                }
 
                 if(!featured.isEmpty())
                     songDoc.append("featured", featured);
@@ -374,19 +397,17 @@ public class SpotifyQueries {
                 songDocuments.add(songDoc);
             }
 
-            albumDoc.append("is_explicit", explicit)
+            albumDoc.append("is_explicit", albumIsExplicit)
                     .append("songs", songDocuments);
             albumDocuments.add(albumDoc);
 
         }
 
-        Document artistDoc = new Document("_id", uri)
+        return new Document("_id", uri)
                 .append("name", artistName)
                 .append("images", imageUrls)
                 .append("genres", genres)
                 .append("albums", albumDocuments);
-
-        return artistDoc;
     }
 
     //TODO change this so it doesn't search DB itself, pass off job to a DatabaseConnection
