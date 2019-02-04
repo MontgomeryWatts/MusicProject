@@ -9,7 +9,6 @@ import com.wrapper.spotify.exceptions.detailed.TooManyRequestsException;
 import com.wrapper.spotify.exceptions.detailed.UnauthorizedException;
 import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
 import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
-import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysis;
 import com.wrapper.spotify.model_objects.specification.*;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRefreshRequest;
 import com.wrapper.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
@@ -19,7 +18,7 @@ import com.wrapper.spotify.requests.data.artists.GetArtistsAlbumsRequest;
 import com.wrapper.spotify.requests.data.playlists.AddTracksToPlaylistRequest;
 import com.wrapper.spotify.requests.data.playlists.CreatePlaylistRequest;
 import com.wrapper.spotify.requests.data.search.simplified.SearchArtistsRequest;
-import com.wrapper.spotify.requests.data.tracks.GetAudioAnalysisForTrackRequest;
+import com.wrapper.spotify.requests.data.tracks.GetAudioFeaturesForSeveralTracksRequest;
 import org.bson.Document;
 
 import java.io.File;
@@ -326,23 +325,26 @@ public class SpotifyQueries {
         return featured;
     }
 
-    private static AudioAnalysis getTrackAnalysis(SpotifyApi spotifyApi, String trackId){
-        GetAudioAnalysisForTrackRequest request = spotifyApi.getAudioAnalysisForTrack(trackId)
+    private static AudioFeatures[] getAudioFeaturesForTracks(SpotifyApi spotifyApi, String[] trackIds){
+        GetAudioFeaturesForSeveralTracksRequest request = spotifyApi.getAudioFeaturesForSeveralTracks(trackIds)
                 .build();
-        AudioAnalysis analysis = null;
+
+        AudioFeatures[] features = new AudioFeatures[0];
         int failedAttempts = 0;
-        while ((analysis == null) && (failedAttempts != MAX_ATTEMPTS)){
+        while ((features.length != trackIds.length) && (failedAttempts != MAX_ATTEMPTS)){
             try{
-                analysis = request.execute();
+                features = request.execute();
             } catch (Exception e){
                 failedAttempts++;
             }
         }
-        return analysis;
+        return features;
     }
 
     private static Document retrieveArtistInfo(SpotifyApi spotifyApi, Artist artist){
         String artistName = artist.getName();
+        System.out.println("Attempting to retrieve information for " + artistName);
+
         String uri = artist.getId();
 
         Image[] artistImages = artist.getImages();
@@ -362,37 +364,49 @@ public class SpotifyQueries {
 
         List<Document> albumDocuments = new ArrayList<>();
         for(Album album: albums){
-            int year = Integer.parseInt(album.getReleaseDate().substring(0, 4));
+            int year = Integer.parseInt(album.getReleaseDate().substring(0, 4)); //Dates are in YYYY-MM-DD format
             Document albumDoc = new Document("title", album.getName())
                     .append("uri", album.getUri())
                     .append("year", year);
 
             Image[] albumImages = album.getImages();
             if(albumImages.length != 0) {
-                albumDoc.append("image", albumImages[0].getUrl());
+                albumDoc.append("image", albumImages[0].getUrl()); //The first image in the images array is the largest
             }
 
             List<Document> songDocuments = new ArrayList<>();
             boolean albumIsExplicit = false;
-            for(TrackSimplified track: album.getTracks().getItems() ){
 
-                if(track.getIsExplicit())
+            TrackSimplified[] tracks = album.getTracks().getItems();
+            String[] trackIds = new String[tracks.length];
+
+            for(int i = 0; i < trackIds.length; i++){
+                trackIds[i] = tracks[i].getId();
+            }
+
+            AudioFeatures[] audioFeatures = getAudioFeaturesForTracks(spotifyApi, trackIds);
+
+            for(int i = 0; i < tracks.length; i++){
+                TrackSimplified track = tracks[i]; //For simplicity's sake
+
+                if (track.getIsExplicit()){
                     albumIsExplicit = true;
+                }
 
                 Document songDoc = new Document("title", track.getName())
                         .append("duration", track.getDurationMs() / 1000)
                         .append("uri", track.getUri());
 
                 Set<String> featured= getFeatured(uri, track);
-
-                AudioAnalysis trackAnalysis = getTrackAnalysis(spotifyApi, track.getId());
-                if(trackAnalysis != null){
-                    int bpm = Math.round(trackAnalysis.getTrack().getTempo());
-                    songDoc.append("bpm", bpm);
+                if(!featured.isEmpty()) {
+                    songDoc.append("featured", featured);
                 }
 
-                if(!featured.isEmpty())
-                    songDoc.append("featured", featured);
+                if(audioFeatures.length == tracks.length){ //If audio info has been retrieved for all songs in the album
+                    AudioFeatures trackFeatures = audioFeatures[i];
+                    int bpm = Math.round(trackFeatures.getTempo());
+                    songDoc.append("bpm", bpm);
+                }
 
                 songDocuments.add(songDoc);
             }
@@ -400,7 +414,6 @@ public class SpotifyQueries {
             albumDoc.append("is_explicit", albumIsExplicit)
                     .append("songs", songDocuments);
             albumDocuments.add(albumDoc);
-
         }
 
         return new Document("_id", uri)
