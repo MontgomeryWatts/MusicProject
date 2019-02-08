@@ -1,11 +1,11 @@
-package db.updates.spotify;
+package db.spotify;
 
 import db.implementations.DatabaseConnection;
 import db.implementations.MongoConnection;
 
 import java.util.Set;
 
-import static db.updates.spotify.SpotifyQueries.*;
+import static db.spotify.SpotifyQueries.*;
 
 
 @SuppressWarnings("unchecked")

@@ -3,7 +3,7 @@ package spotify;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.SpotifyHttpManager;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
-import db.updates.spotify.SpotifyQueries;
+import db.spotify.SpotifyQueries;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import spark.*;

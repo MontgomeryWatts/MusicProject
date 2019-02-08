@@ -1,4 +1,4 @@
-package db.updates.spotify;
+package db.spotify;
 
 import com.mongodb.client.MongoCollection;
 import com.neovisionaries.i18n.CountryCode;
@@ -29,7 +29,7 @@ import static com.mongodb.client.model.Filters.*;
 
 public class SpotifyQueries {
     private static final int MAX_ATTEMPTS = 10;
-    private static final int WAIT_TIME = 2000;
+    private static final int WAIT_TIME = 1000;
 
     public static Document getArtistDocById(String artistId) {
         SpotifyApi spotifyApi = createSpotifyAPI();
@@ -42,7 +42,7 @@ public class SpotifyQueries {
      * @param artistName The name of the artist to attempt to add
      */
 
-    static List<Document> getArtistDocsByName(String artistName) {
+    public static List<Document> getArtistDocsByName(String artistName) {
         List<Document> artistDocs = new ArrayList<>();
 
         SpotifyApi spotifyApi = createSpotifyAPI();
@@ -116,14 +116,16 @@ public class SpotifyQueries {
             System.err.println(e.getMessage());
         }
 
-        ClientCredentialsRequest request = spotifyApi.clientCredentials().build();
+        ClientCredentialsRequest request;
+        if(spotifyApi != null) {
+            request = spotifyApi.clientCredentials().build();
+            try {
+                ClientCredentials clientCredentials = request.execute();
+                spotifyApi.setAccessToken(clientCredentials.getAccessToken());
 
-        try{
-            ClientCredentials clientCredentials = request.execute();
-            spotifyApi.setAccessToken(clientCredentials.getAccessToken());
-
-        } catch (Exception e){
-            System.err.println(e.getMessage());
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+            }
         }
 
         return spotifyApi;
@@ -247,6 +249,9 @@ public class SpotifyQueries {
      */
 
     private static Paging<Artist> getArtistsByName(SpotifyApi spotifyApi, String artistName){
+        if(artistName == null){
+            return new Paging.Builder<Artist>().setItems(new Artist[0]).build();
+        }
 
         SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
                 .market(CountryCode.US)
@@ -276,36 +281,31 @@ public class SpotifyQueries {
             e.printStackTrace();
         }
 
-        return new Paging.Builder<Artist>().build();
+        return new Paging.Builder<Artist>().setItems(new Artist[0]).build();
     }
 
     private static Artist getArtistById(SpotifyApi spotifyApi, String artistID){
+        if(artistID == null){
+            return null;
+        }
+
+        Artist artist = null;
         GetArtistRequest request = spotifyApi.getArtist(artistID).build();
+        int failedAttempts = 0;
 
-        try{
-            return request.execute();
-        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
-
-            int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in getArtistById, waiting for " + wait + " milliseconds");
+        while( (artist == null) && (failedAttempts != MAX_ATTEMPTS)){
             try{
-                Thread.sleep(wait);
-            } catch (InterruptedException ie){
-                ie.printStackTrace();
+                artist = request.execute();
+            } catch (Exception e){
+                failedAttempts++;
+                try{
+                    Thread.sleep(WAIT_TIME);
+                } catch (InterruptedException ie){
+                    System.err.println("What in tarnation");
+                }
             }
-            return  getArtistById(spotifyApi, artistID);
-        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
-            try{
-                Thread.sleep(5000);
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            }
-            return  getArtistById(spotifyApi, artistID);
         }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
+        return artist;
     }
 
 
@@ -404,8 +404,10 @@ public class SpotifyQueries {
 
                 if(audioFeatures.length == tracks.length){ //If audio info has been retrieved for all songs in the album
                     AudioFeatures trackFeatures = audioFeatures[i];
-                    int bpm = Math.round(trackFeatures.getTempo());
-                    songDoc.append("bpm", bpm);
+                    if(trackFeatures != null){ //Some tracks don't have audio analysis
+                        int bpm = Math.round(trackFeatures.getTempo());
+                        songDoc.append("bpm", bpm);
+                    }
                 }
 
                 songDocuments.add(songDoc);

@@ -1,4 +1,4 @@
-package db.updates.spotify;
+package db.spotify;
 
 import db.implementations.MongoConnection;
 import org.bson.Document;
@@ -7,8 +7,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
-import static db.updates.spotify.SpotifyQueries.*;
 
 
 public class AddArtists {
@@ -19,7 +17,7 @@ public class AddArtists {
 
         List<Document> artistDocs = new ArrayList<>();
         for(String name: getArtistNames("src/main/resources/artistNames.txt"))
-            artistDocs.addAll(getArtistDocsByName(name));
+            artistDocs.addAll(SpotifyQueries.getArtistDocsByName(name));
 
         for(Document artist: artistDocs)
             db.insertArtist(artist);
