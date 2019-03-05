@@ -20,7 +20,7 @@
                 <#list genres?chunk(4) as row>
                 <div class="row">
                     <#list row as genre>
-                            <div class="col-md-3">
+                            <div class="col-xs-6 col-md-3">
                                 <a href="/genres/${genre}?p=1">
                                     ${genre}
                                 </a>
