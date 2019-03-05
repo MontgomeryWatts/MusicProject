@@ -22,6 +22,7 @@ public class ArtistController {
         if(!model.containsAttribute("artists")) {
             List<Document> artists = service.getArtists();
             model.addAttribute("artists", artists);
+            model.addAttribute("title", "Displays random artists");
         }
         return "artists";
     }

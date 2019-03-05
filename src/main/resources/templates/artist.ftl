@@ -35,7 +35,7 @@
                 <#list artist["albums"] as album>
                     <tr>
                         <td rowspan="3" style="width: 200px;">
-                            <a class="btn" data-toggle="collapse" data-target="#collapseExample${album?index}" style="padding: 6px 0px;">
+                            <a class="btn" data-toggle="collapse" data-target="#collapsedAlbum${album?index}" style="padding: 6px 0px;">
                                 <#if album["image"]??>
                                     <img src="${album["image"]}" class="album-image">
                                 </#if>
@@ -66,7 +66,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                        <div id="collapseExample${album?index}" aria-expanded="true" style="" class="panel panel-default collapse">
+                        <div id="collapsedAlbum${album?index}" aria-expanded="true" style="" class="panel panel-default collapse">
 
                             <ol class="list-group">
                                 <#list album["songs"] as song>

@@ -22,8 +22,10 @@ public class SearchController {
             int offset = 0;
             int limit = Integer.MAX_VALUE;
             model.addAttribute("artists", service.getArtistsByName(artistName, offset, limit));
+            model.addAttribute("title", "Search Artists");
             return "artists";
         }
+        model.addAttribute("title", "Artist search");
         return "search";
     }
 
