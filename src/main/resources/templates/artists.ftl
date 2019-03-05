@@ -11,7 +11,7 @@
     </head>
 
     <body>
-        <#include "/html/navigation.html">
+        <#include "navbar.ftl">
         <div class="container">
              <#if artists?has_content>
             <#list artists?chunk(2) as row>

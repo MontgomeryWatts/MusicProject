@@ -23,7 +23,7 @@ public class PlaylistController {
 
     @GetMapping("")
     public String playlist(){
-        return "/html/playlistform.html";
+        return "playlistform";
     }
 
     @PostMapping("")

@@ -11,7 +11,7 @@
     </head>
 
     <body>
-        <#include "/html/navigation.html">
+        <#include "navbar.ftl">
         <div class="container">
             <ul class="list-inline text-center">
                 <#list alphabet as letter>

@@ -11,7 +11,7 @@
     </head>
 
     <body>
-        <#include "/html/navigation.html">
+        <#include "navbar.ftl">
         <div class="container">
             <form method="get" action="/search">
                 <table>
