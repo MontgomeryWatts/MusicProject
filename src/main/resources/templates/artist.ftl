@@ -2,16 +2,11 @@
 <html lang="en">
     <head>
         <title><#if artist??>${artist["name"]}</#if></title>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <link href="/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="/css/style.css">
+        <#include "head.ftl">
     </head>
 
     <body>
-        <#include "/html/navigation.html">
+        <#include "navbar.ftl">
         <div class="container">
             <#if artist??>
                 <h1>${artist["name"]}</h1>
@@ -35,7 +30,7 @@
                 <#list artist["albums"] as album>
                     <tr>
                         <td rowspan="3" style="width: 200px;">
-                            <a class="btn" data-toggle="collapse" data-target="#collapseExample${album?index}" style="padding: 6px 0px;">
+                            <a class="btn" data-toggle="collapse" data-target="#collapsedAlbum${album?index}" style="padding: 6px 0px;">
                                 <#if album["image"]??>
                                     <img src="${album["image"]}" class="album-image">
                                 </#if>
@@ -66,7 +61,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                        <div id="collapseExample${album?index}" aria-expanded="true" style="" class="panel panel-default collapse">
+                        <div id="collapsedAlbum${album?index}" aria-expanded="true" style="" class="panel panel-default collapse">
 
                             <ol class="list-group">
                                 <#list album["songs"] as song>
@@ -85,9 +80,7 @@
             </#if>
         </div>
 
-        <script src="/js/formValidation.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script src="/js/bootstrap.min.js"></script>
+        <#include "javascript.ftl">
     </body>
 
 </html>

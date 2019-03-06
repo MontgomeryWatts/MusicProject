@@ -33,9 +33,12 @@ public class GenreController {
         if (letter != null){
             char c = letter.charAt(0);
             genres = service.getGenresByLetter(c);
+            model.addAttribute("title", "Genres starting with " + c);
+        } else{
+            genres = service.getAllGenres();
+            model.addAttribute("title", "All genres");
         }
-        else
-          genres = service.getAllGenres();
+
         model.addAttribute("genres", genres);
         return "genres";
     }
@@ -50,6 +53,7 @@ public class GenreController {
         int limit = DatabaseQueries.SMALL_SAMPLE_SIZE;
         List<Document> artists = service.getArtistsByGenre(genre, offset, limit);
         model.addAttribute("artists", artists);
+        model.addAttribute("title", genre + " artists");
 
         //Used for pagination
         String prevLink = "/genres/" + genre + "?p=" + (page-1);
