@@ -1,6 +1,6 @@
 <nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="container">
-        <a class="navbar-brand" href="/">Home Page</a>
+        <a class="navbar-brand brand-color" href="/">SpotifyDB</a>
         <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-collapsible">
             <span class="glyphicon glyphicon-align-justify"></span>
         </button>
