@@ -21,6 +21,10 @@ input{
     border-radius: 50%;
 }
 
+.brand-color {
+    color: #2ECC71 !important;
+}
+
 .no-text-overflow{
     white-space:nowrap;
     text-overflow:ellipsis;
