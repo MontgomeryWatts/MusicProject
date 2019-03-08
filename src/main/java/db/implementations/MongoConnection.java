@@ -201,6 +201,17 @@ public class MongoConnection extends DatabaseConnection {
     }
 
     @Override
+    public String getNthPopularGenre(int n){
+        Document countDoc = collection.aggregate(Arrays.asList(
+                unwind("$genres"),
+                sortByCount("$genres"),
+                skip(n-1),
+                limit(1)
+        )).first();
+        return countDoc != null ? countDoc.getString("_id"): null;
+    }
+
+    @Override
     public int getNumberOfSongs() {
         Document songsDoc = collection.aggregate(
                 Arrays.asList(
