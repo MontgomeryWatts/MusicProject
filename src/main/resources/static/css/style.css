@@ -36,8 +36,6 @@ input{
     width: 200px;
 }
 
-.label { text-align: right}
-
 .header {
     position: fixed;
     top: 0;
