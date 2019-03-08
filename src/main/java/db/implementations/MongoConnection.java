@@ -70,11 +70,6 @@ public class MongoConnection extends DatabaseConnection {
         return collection.distinct("_id", String.class).into(new HashSet<>());
     }
 
-    /**
-     *
-     * @return
-     */
-
     @Override
     public List<Document> getArtistsByRandom(){
         return collection.aggregate(Arrays.asList(
@@ -125,13 +120,6 @@ public class MongoConnection extends DatabaseConnection {
                         limit(limit)
                 )).into(new ArrayList<>());
     }
-
-    /**
-     * Gets a List of artists startin
-     * @param offset
-     * @param limit
-     * @return
-     */
 
     @Override
     public List<Document> getArtists(int offset, int limit) {
@@ -216,13 +204,14 @@ public class MongoConnection extends DatabaseConnection {
         Document songsDoc = collection.aggregate(
                 Arrays.asList(
                         unwind("$albums"),
-                        unwind("$albums.songs"),
-                        replaceRoot("$albums.songs"),
-                        group(null, Accumulators.sum("total_songs", 1))
+                        project(Projections.computed("numSongs",
+                                new Document("$size", "$albums.songs"))
+                        ),
+                        group(null, Accumulators.sum("totalSongs", "$numSongs"))
                 )
         ).first();
 
-        return songsDoc.getInteger("total_songs");
+        return songsDoc.getInteger("totalSongs");
     }
 
     @Override
