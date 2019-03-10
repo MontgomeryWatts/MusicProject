@@ -9,7 +9,7 @@
             <#include "navbar.ftl">
             <div class="container">
                 <#if songs?has_content>
-                    <div id="playlistCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
+                    <div id="playlistCarousel" class="carousel slide collapse in" data-ride="carousel" data-interval="false">
                         <div class="carousel-inner">
                         <#list songs as song>
                             <div class="item <#if song["uri"]=songs?first["uri"]>active</#if>">
@@ -31,6 +31,9 @@
                             <span class="glyphicon glyphicon-chevron-right"></span>
                         </a>
                     </div>
+                    <a class="btn" data-toggle="collapse" data-target="#playlistCarousel">
+                        Toggle Carousel
+                    </a>
                 <#else>
                 <h1>
                     NO SONGS FOUND
