@@ -9,12 +9,32 @@
             <#include "navbar.ftl">
             <div class="container">
                 <#if songs?has_content>
-                <#list songs as song>
-                    <a href="${song["uri"]}">
-                        ${song["title"]} - ${song["artist"]} &emsp;&emsp; ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
-                    </a>
-                    <br>
-                </#list>
+                    <div id="playlistCarousel" class="carousel slide" data-ride="carousel">
+                        <div class="carousel-inner">
+                        <#list songs as song>
+                            <div class="item <#if song["uri"]=songs?first["uri"]>active</#if>">
+                                <a href="${song["uri"]}">
+                                    <img class="img-responsive center-block" src="${song["image"]}" alt="First Slide">
+                                </a>
+                                <div class="carousel-caption transparent-background ca">
+                                    <h2>${song["title"]}</h2>
+                                    <p>${song["artist"]}</p>
+                                </div>
+                            </div>
+                        </#list>
+                        </div>
+                        <a class="carousel-control left" href="#playlistCarousel" data-slide="prev">
+
+                            <span class="glyphicon glyphicon-chevron-left"></span>
+
+                        </a>
+
+                        <a class="carousel-control right" href="#playlistCarousel" data-slide="next">
+
+                            <span class="glyphicon glyphicon-chevron-right"></span>
+
+                        </a>
+                    </div>
                 <#else>
                 <h1>
                     NO SONGS FOUND
