@@ -1,4 +1,4 @@
-<!-- Things to include in the <head> of all files -->
+<#-- Things to include in the <head> of all files -->
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">

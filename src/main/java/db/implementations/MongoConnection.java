@@ -252,6 +252,7 @@ public class MongoConnection extends DatabaseConnection {
         Document groupDoc = new Document("$group",
                 new Document ("_id", new Document("uri", "$albums.songs.uri")
                         .append("title", "$albums.songs.title")
+                        .append("image", "$albums.image")
                         .append("artist", "$name")
                         .append("duration", "$albums.songs.duration")) );
 
