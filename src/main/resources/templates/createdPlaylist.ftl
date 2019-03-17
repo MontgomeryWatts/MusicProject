@@ -19,7 +19,7 @@
                                 <a href="${song["uri"]}">
                                     <img class="img-responsive center-block" src="${song["image"]}" alt="Album Art">
                                 </a>
-                                <div class="carousel-caption transparent-background">
+                                <div class="carousel-caption playlist-caption transparent-background">
                                     <h2>${song["title"]}</h2>
                                     <p>${song["artist"]}</p>
                                 </div>
