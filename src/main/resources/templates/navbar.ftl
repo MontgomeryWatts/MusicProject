@@ -20,7 +20,7 @@
                 </li>
             </ul>
             <form class="navbar-form navbar-right" method="get" action="/search">
-                <div class="form-group">
+                <div class="form-group" style="display: flex">
                     <input type="text" class="form-control" placeholder="Artist Name" name="artist_name" id="artist_input">
                     <button type="submit" class="btn btn-default" onclick="return notEmpty('artist_input')">
                         <span class="glyphicon glyphicon-search"></span> Search
