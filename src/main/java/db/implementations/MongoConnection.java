@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import spring.controllers.ArtistController;
 
 import java.util.*;
 
@@ -21,8 +22,8 @@ import static com.mongodb.client.model.Filters.lte;
 
 public class MongoConnection extends DatabaseConnection {
     private MongoCollection<Document> collection;
-    private final int SMALL_SAMPLE_SIZE = 20;
-    private final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
+    private static final int SMALL_SAMPLE_SIZE = 20;
+    private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
 
     public MongoConnection(){
         MongoClientURI uri = getMongoClientUri();
@@ -31,23 +32,41 @@ public class MongoConnection extends DatabaseConnection {
         collection = db.getCollection("artists");
     }
 
+    /**
+     * Create a MongoClientURI so that the MongoConnection knows where to attempt to connect.
+     * Tries to retrieve an environment variable, otherwise uses localhost.
+     * @return MongoClientURI specifying connection details
+     */
+
     private static MongoClientURI getMongoClientUri(){
         String envVariable = System.getenv("MONGODB_URI");
         return (envVariable != null) ? new MongoClientURI(envVariable) : new MongoClientURI("mongodb://localhost:27017/spotifydb");
     }
 
+
+    /**
+     * The collection attribute has its documents designed around artists. That is,
+     * each document represents one artist in the database.
+     * @return The number of artists stored in the database.
+     */
     @Override
     public long getNumberOfArtists(){
         return collection.count();
     }
 
+
+    /**
+     *
+     * @param genre String representing the genre to search for
+     * @return The number of artists that have that genre in their genres array
+     */
     @Override
     public long getNumberOfArtistsByGenre(String genre){
         return collection.count(eq("genres", genre));
     }
 
     /**
-     * Retrieves the URI of a random artist.
+     * Retrieves the URI of a random artist. This is used for a redirect in {@link ArtistController#getRandom()}
      * @return String representing the URI of a random artist.
      */
 
@@ -60,16 +79,32 @@ public class MongoConnection extends DatabaseConnection {
         return randomArtistDoc.getString("_id");
     }
 
+    /**
+     * Gets a set of the URIs of all artists that have featured on any song ever (in the database). Currently used by
+     * {@link db.spotify.AddReferencedArtists} in order to 'organically' grow the database.
+     * @return
+     */
     @Override
     public Set<String> getAllFeaturedArtists(){
         return collection.distinct("albums.songs.featured", String.class).into(new HashSet<>());
     }
+
+    /**
+     * Gets a set of the URIs of all artists that are currently in the database. Currently used by {@link db.spotify.AddReferencedArtists}
+     * in conjunction with {@link #getAllFeaturedArtists()} in order to only add artists not in the database already.
+     * @return
+     */
 
     @Override
     public Set<String> getAllArtistUris(){
         return collection.distinct("_id", String.class).into(new HashSet<>());
     }
 
+
+    /**
+     * Returns a list of up to {@value #SMALL_SAMPLE_SIZE} artist Documents selected by random.
+     * @return A List of random artist Documents
+     */
     @Override
     public List<Document> getArtistsByRandom(){
         return collection.aggregate(Arrays.asList(
@@ -88,6 +123,14 @@ public class MongoConnection extends DatabaseConnection {
     public Document getArtistByUri(String artistUri) {
         return collection.find( eq("_id", artistUri)).first();
     }
+
+    /**
+     * Gets a list of artist Documents by genre. Offset and limit are passed for use in pagination.
+     * @param genre The genre to match on
+     * @param offset How many artist Documents to skip
+     * @param limit How many artist Documents to return up to
+     * @return A list of artist Documents that have the given genre
+     */
 
     @Override
     public List<Document> getArtistsByGenre(String genre, int offset, int limit) {
@@ -121,6 +164,13 @@ public class MongoConnection extends DatabaseConnection {
                 )).into(new ArrayList<>());
     }
 
+    /**
+     * Gets a list of artist Documents. No criterion is passed, so this would be of use when
+     * scrolling through all artists in the database. Offset and limit are included for pagination purposes.
+     * @param offset How many artist documents to skip.
+     * @param limit How many artist documents to return up to.
+     * @return A List of artist Documents.
+     */
     @Override
     public List<Document> getArtists(int offset, int limit) {
         return collection.aggregate(
@@ -167,7 +217,7 @@ public class MongoConnection extends DatabaseConnection {
     /**
      * Gets all genres that begin with a certain letter
      * @param c The starting letter
-     * @return A List of all genres that start with @v
+     * @return A List of all genres that start with
      */
 
     @Override
@@ -188,6 +238,12 @@ public class MongoConnection extends DatabaseConnection {
         return (genresDoc != null) ? (ArrayList<String>) genresDoc.get("genres") : new ArrayList<>();
     }
 
+
+    /**
+     * Determines which genre is the 'nth' most popular, e.g. passing 1 will find the most popular genre.
+     * @param n The place of the genre you're interested in finding
+     * @return String representing the most popular genre
+     */
     @Override
     public String getNthPopularGenre(int n){
         Document countDoc = collection.aggregate(Arrays.asList(
@@ -199,6 +255,10 @@ public class MongoConnection extends DatabaseConnection {
         return countDoc != null ? countDoc.getString("_id"): null;
     }
 
+    /**
+     * Straightforward.
+     * @return int specifying how many songs are in the database.
+     */
     @Override
     public int getNumberOfSongs() {
         Document songsDoc = collection.aggregate(
@@ -214,6 +274,10 @@ public class MongoConnection extends DatabaseConnection {
         return songsDoc.getInteger("totalSongs");
     }
 
+    /**
+     * Tells you how many seconds it would take to listen to every single song in the database.
+     * @return int representing the total song duration.
+     */
     @Override
     public int getTotalDuration() {
         Document songsDoc = collection.aggregate(
@@ -228,6 +292,15 @@ public class MongoConnection extends DatabaseConnection {
         return songsDoc.getInteger("duration");
     }
 
+    /**
+     * Gets song documents for playlist creation based on given criteria.
+     * @param artists A Set of artist names
+     * @param genres A Set of genres
+     * @param allowExplicit whether explicit albums should be allowed on the album
+     * @param startYear The earliest year songs may be added from
+     * @param endYear The latest year songs may be added from
+     * @return A List of song documents that match the criteria.
+     */
     @Override
     public List<Document> getSongsByCriteria(Set<String> artists, Set<String> genres, boolean allowExplicit, int startYear, int endYear) {
         List<Bson> aggregatePipeline = new ArrayList<>();
@@ -268,6 +341,12 @@ public class MongoConnection extends DatabaseConnection {
         return collection.aggregate(aggregatePipeline).into( new ArrayList<>());
     }
 
+    /**
+     * Creates a playlist from a passed list of song documents and a desired playlist length.
+     * @param potentialSongs A List of songs from {@link #getSongsByCriteria(Set, Set, boolean, int, int)}
+     * @param playlistDuration A desired playlist length in seconds
+     * @return A list of song documents containing the final playlist
+     */
     @Override
     public List<Document> createPlaylist(List<Document> potentialSongs, int playlistDuration) {
         List<Document> playlistDocs = new ArrayList<>();
