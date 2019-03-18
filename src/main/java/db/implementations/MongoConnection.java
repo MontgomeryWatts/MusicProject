@@ -145,7 +145,6 @@ public class MongoConnection extends DatabaseConnection {
 
     @Override
     public List<Document> getArtistsByLikeName(String name, int offset, int limit) {
-        System.out.println(name);
         Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
         return  collection.aggregate(
                 Arrays.asList(
