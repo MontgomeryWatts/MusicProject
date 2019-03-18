@@ -83,7 +83,7 @@ public class MongoConnection extends DatabaseConnection {
     /**
      * Gets a set of the URIs of all artists that have featured on any song ever (in the database). Currently used by
      * {@link db.spotify.AddReferencedArtists} in order to 'organically' grow the database.
-     * @return
+     * @return A Set of the URIs of all artists featured
      */
     @Override
     public Set<String> getAllFeaturedArtists(){
@@ -93,7 +93,7 @@ public class MongoConnection extends DatabaseConnection {
     /**
      * Gets a set of the URIs of all artists that are currently in the database. Currently used by {@link db.spotify.AddReferencedArtists}
      * in conjunction with {@link #getAllFeaturedArtists()} in order to only add artists not in the database already.
-     * @return
+     * @return A Set of the URIs of all artists
      */
 
     @Override
@@ -145,6 +145,7 @@ public class MongoConnection extends DatabaseConnection {
 
     @Override
     public List<Document> getArtistsByLikeName(String name, int offset, int limit) {
+        name = name.replace('+', ' '); // jQuery replaces spaces with +'s
         Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
         return  collection.aggregate(
                 Arrays.asList(
