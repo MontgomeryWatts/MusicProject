@@ -13,6 +13,7 @@ public interface ArtistDAO {
     Set<String> getAllFeaturedArtists();
     Set<String> getAllArtistUris();
     List<Document> getArtistsByGenre(String genre, int offset, int limit);
+    List<Document> getArtistsByLikeName(String name, int offset, int limit);
     List<Document> getArtistsByName(String name, int offset, int limit);
     List<Document> getArtists(int offset, int limit);
     List<Document> getArtistsByRandom();

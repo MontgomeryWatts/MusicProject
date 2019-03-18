@@ -34,6 +34,9 @@ public class DatabaseService {
     public List<Document> getArtistsByGenre(String genre, int offset, int limit){
         return db.getArtistsByGenre(genre, offset, limit);
     }
+    public List<Document> getArtistsByLikeName(String name, int offset, int limit){
+        return db.getArtistsByLikeName(name, offset, limit);
+    }
     public List<Document> getArtistsByName(String name, int offset, int limit){
         return db.getArtistsByName(name, offset, limit);
     }
