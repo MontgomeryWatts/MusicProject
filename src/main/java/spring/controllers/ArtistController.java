@@ -19,11 +19,9 @@ public class ArtistController {
 
     @GetMapping("")
     public String artists(Model model){
-        if(!model.containsAttribute("artists")) {
-            List<Document> artists = service.getArtists();
-            model.addAttribute("artists", artists);
-            model.addAttribute("title", "Displays random artists");
-        }
+        List<Document> artists = service.getArtists();
+        model.addAttribute("artists", artists);
+        model.addAttribute("title", "Displays random artists");
         return "artists";
     }
 
