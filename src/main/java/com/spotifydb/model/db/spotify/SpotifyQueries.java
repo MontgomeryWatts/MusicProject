@@ -100,21 +100,18 @@ public class SpotifyQueries {
 
     public static SpotifyApi createSpotifyAPI(URI uri){
 
-        SpotifyApi spotifyApi = null;
+        SpotifyApi spotifyApi;
+        String clientID = System.getenv("SPOTIFY_CLIENT_ID");
+        String clientSecret = System.getenv("SPOTIFY_CLIENT_SECRET");
 
-        try {
-            File file = new File("src/main/resources/clientInfo.txt");
-            Scanner scanner = new Scanner(file);
-            SpotifyApi.Builder builder = SpotifyApi.builder()
-                    .setClientId(scanner.nextLine())
-                    .setClientSecret(scanner.nextLine());
-            if(uri != null)
-                    builder.setRedirectUri(uri);
+        SpotifyApi.Builder builder = SpotifyApi.builder()
+                .setClientId(clientID)
+                .setClientSecret(clientSecret);
+        if(uri != null)
+                builder.setRedirectUri(uri);
 
-            spotifyApi = builder.build();
-        } catch (Exception e){
-            System.err.println(e.getMessage());
-        }
+        spotifyApi = builder.build();
+
 
         ClientCredentialsRequest request;
         if(spotifyApi != null) {
