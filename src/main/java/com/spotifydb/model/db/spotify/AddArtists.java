@@ -1,7 +1,10 @@
 package com.spotifydb.model.db.spotify;
 
+import com.spotifydb.model.db.implementations.DatabaseConnection;
 import com.spotifydb.model.db.implementations.MongoConnection;
-import org.bson.Document;
+import com.wrapper.spotify.model_objects.specification.Album;
+import com.wrapper.spotify.model_objects.specification.Artist;
+import com.wrapper.spotify.model_objects.specification.Paging;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -10,18 +13,19 @@ import java.util.Scanner;
 
 
 public class AddArtists {
-
-    /*
     public static void main(String[] args) {
-        MongoConnection db = new MongoConnection();
+        DatabaseConnection db = new MongoConnection();
+        SpotifyConnection sc = new SpotifyConnection();
         System.out.println(db.getNumberOfArtists());
 
-        List<Document> artistDocs = new ArrayList<>();
-        for(String name: getArtistNames("src/main/resources/artistNames.txt"))
-            artistDocs.addAll(SpotifyQueries.getArtistDocsByName(name));
+        for(String name: getArtistNames("src/main/resources/artistNames.txt")){
+            Paging<Artist> artists = sc.getArtistsByName(name);
+            for(Artist artist: artists.getItems() ){
+                Album[] albums = sc.getAlbumsByArtist(artist);
+                db.insertArtist(artist, albums);
+            }
 
-        for(Document artist: artistDocs)
-            db.insertArtist(artist);
+        }
 
         System.out.println(db.getNumberOfArtists());
     }
@@ -29,7 +33,7 @@ public class AddArtists {
      * Reads in from a file a list of artists to add to the database
      * @param path The path to the file containing the artists' names
      * @return A List containing the artists names
-
+    */
 
     private static List<String> getArtistNames(String path){
         List<String> artists = new ArrayList<>();
@@ -45,5 +49,5 @@ public class AddArtists {
 
         return artists;
     }
-*/
+
 }
