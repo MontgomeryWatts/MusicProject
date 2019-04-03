@@ -31,7 +31,7 @@ public class SpotifyConnection {
     }
 
     public SpotifyConnection(){
-        spotifyApi = createSpotifyAPI(null);
+        this(null);
     }
 
     public static SpotifyApi createSpotifyAPI(URI uri){
