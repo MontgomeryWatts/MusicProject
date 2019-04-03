@@ -16,20 +16,22 @@
                 <br>
                 <br>
                 <h2>Genres</h2>
-                <table>
-                    <tr>
-                    <#list artist["genres"] as genre>
-                        <a href="/genres/${genre}?p=1" class="tag">${genre}</a>
-                    </#list>
-                    </tr>
-                </table>
+                <#if artist["genres"]??>
+                    <table>
+                        <tr>
+                        <#list artist["genres"] as genre>
+                            <a href="/genres/${genre}?p=1" class="tag">${genre}</a>
+                        </#list>
+                        </tr>
+                    </table>
+                </#if>
 
 
                 <h2>Albums</h2>
                 <table>
                 <#list artist["albums"] as album>
                     <tr>
-                        <td rowspan="3" style="width: 200px;">
+                        <td rowspan="2" style="width: 200px;">
                             <a class="btn" data-toggle="collapse" data-target="#collapsedAlbum${album?index}" style="padding: 6px 0px;">
                                 <#if album["image"]??>
                                     <img src="${album["image"]}" class="album-image">
@@ -49,16 +51,7 @@
                             ${album["year"]?c}
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            <span>&nbsp;</span>
-                            <#if album["is_explicit"]>
-                                <b>Explicit</b>
-                            <#else>
-                                Clean
-                            </#if>
-                        </td>
-                    </tr>
+
                     <tr>
                         <td colspan="2">
                         <div id="collapsedAlbum${album?index}" aria-expanded="true" style="" class="panel panel-default collapse">

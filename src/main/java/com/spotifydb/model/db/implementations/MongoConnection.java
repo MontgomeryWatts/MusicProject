@@ -408,11 +408,16 @@ public class MongoConnection extends DatabaseConnection {
             aggregatePipeline.add(sample(LARGE_SAMPLE_SIZE)); //No artist or genre criteria, sample random artists
         }
 
-        aggregatePipeline.add(unwind("$albums"));
+        aggregatePipeline.addAll(
+                Arrays.asList(
+                        unwind("$albums"),
+                        match(and( gte("albums.year", startYear), lte("albums.year", endYear))),
+                        unwind("$albums.songs")
+                )
+        );
 
-        //If the user wants to filter explicit songs
-        if(!allowExplicit) {
-            aggregatePipeline.add(match(eq("albums.is_explicit", allowExplicit)));
+        if (!allowExplicit){
+            aggregatePipeline.add(match(eq("albums.songs.explicit", allowExplicit)));
         }
 
         //The driver won't let me make the _id field a document when using Aggregates.group
@@ -426,8 +431,6 @@ public class MongoConnection extends DatabaseConnection {
 
         aggregatePipeline.addAll(
                 Arrays.asList(
-                        match(and( gte("albums.year", startYear), lte("albums.year", endYear))),
-                        unwind("$albums.songs"),
                         groupDoc,
                         replaceRoot("$_id")
                 )
