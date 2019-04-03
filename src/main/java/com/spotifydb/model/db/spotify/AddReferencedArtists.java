@@ -12,6 +12,7 @@ import static com.spotifydb.model.db.spotify.SpotifyQueries.*;
 public class AddReferencedArtists {
     public static void main(String[] args) {
 
+        /*
         DatabaseConnection db = new MongoConnection();
 
         Set<String> allFeatured = db.getAllFeaturedArtists();
@@ -26,5 +27,6 @@ public class AddReferencedArtists {
         long endTime = System.currentTimeMillis();
         long numDocsAtEnd = db.getNumberOfArtists();
         System.out.println("Took " + (endTime - startTime)/1000 + " seconds to add " + (numDocsAtEnd-numDocsAtStart) + " artists.");
+        */
     }
 }

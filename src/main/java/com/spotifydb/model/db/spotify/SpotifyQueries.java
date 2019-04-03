@@ -27,34 +27,9 @@ import java.util.*;
 import static com.mongodb.client.model.Filters.*;
 
 public class SpotifyQueries {
-    private static final int MAX_ATTEMPTS = 10;
-    private static final int WAIT_TIME = 1000;
 
-    public static Document getArtistDocById(String artistId) {
-        SpotifyApi spotifyApi = createSpotifyAPI();
-        Artist artist = getArtistById(spotifyApi, artistId);
-        return (artist == null) ? null : retrieveArtistInfo(spotifyApi, artist);
-    }
+    /*
 
-    /**
-     * Attempts to create and add an artist Document to a given collection.
-     * @param artistName The name of the artist to attempt to add
-     */
-
-    public static List<Document> getArtistDocsByName(String artistName) {
-        List<Document> artistDocs = new ArrayList<>();
-
-        SpotifyApi spotifyApi = createSpotifyAPI();
-        Paging<Artist> artists = getArtistsByName(spotifyApi, artistName);
-
-        Document artistDoc;
-        for( Artist artist: artists.getItems()){
-            artistDoc = retrieveArtistInfo(spotifyApi, artist);
-            if(artistDoc != null)
-                artistDocs.add(artistDoc);
-        }
-        return artistDocs;
-    }
 
     public static boolean addTracksToPlaylist(MongoCollection<Document> usersCollection, String username, String playlistId, String[] uris){
         if(playlistId == null) {
@@ -88,52 +63,12 @@ public class SpotifyQueries {
     }
 
     /**
-     * Creates a SpotifyApi Object with my given client info that can be used to generate requests.
-     * @return A SpotifyApi Object that can make requests
-     */
-
-    private static SpotifyApi createSpotifyAPI(){
-
-        return createSpotifyAPI(null);
-    }
-
-    public static SpotifyApi createSpotifyAPI(URI uri){
-
-        SpotifyApi spotifyApi;
-        String clientID = System.getenv("SPOTIFY_CLIENT_ID");
-        String clientSecret = System.getenv("SPOTIFY_CLIENT_SECRET");
-
-        SpotifyApi.Builder builder = SpotifyApi.builder()
-                .setClientId(clientID)
-                .setClientSecret(clientSecret);
-        if(uri != null)
-                builder.setRedirectUri(uri);
-
-        spotifyApi = builder.build();
-
-
-        ClientCredentialsRequest request;
-        if(spotifyApi != null) {
-            request = spotifyApi.clientCredentials().build();
-            try {
-                ClientCredentials clientCredentials = request.execute();
-                spotifyApi.setAccessToken(clientCredentials.getAccessToken());
-
-            } catch (Exception e) {
-                System.err.println(e.getMessage());
-            }
-        }
-
-        return spotifyApi;
-    }
-
-    /**
      * Attempts to create an empty Spotify playlist, and returns the spotify id of the playlist so that tracks may be
      * added to it.
      * @param username The username of the person to create a playlist for
      * @param playlistName The name of the playlist to create
      * @return a String containing the Spotify Id of the playlist
-     */
+
 
     public static String exportSpotifyPlaylist(String accessToken, String refreshToken, String username, String playlistName){
         SpotifyApi spotifyApi = createSpotifyAPI();
@@ -161,181 +96,12 @@ public class SpotifyQueries {
         return null;
     }
 
-    public static Album[] getAlbumsByArtist(Artist artist){
-        SpotifyApi spotifyApi = createSpotifyAPI();
-        if (spotifyApi == null){
-            return null; //Indicate there was an error, not that an artist has no albums
-        }
-
-        String artistId = artist.getId();
-        List<String> albumIds = getAlbumIds(spotifyApi, artistId);
-        return getAlbumsById(spotifyApi, albumIds);
-    }
-
-    private static Album[] getAlbumsById(SpotifyApi spotifyApi, List<String> ids){
-        int albumsToGet = ids.size();
-        if(albumsToGet == 0)
-            return new Album[0];
-        int failedAttempts = 0;
-        int startIndex = 0;
-        int endIndex = (albumsToGet - startIndex > 20) ? startIndex + 20 : startIndex + (albumsToGet - startIndex);
-        List<Album> albums = new ArrayList<>();
-
-        while( (albumsToGet != 0) && (failedAttempts != MAX_ATTEMPTS) ){
-            try{
-                String[] idArray = ids.subList(startIndex, endIndex).toArray(new String[0]); //make sure inbounds
-                GetSeveralAlbumsRequest request = spotifyApi.getSeveralAlbums(idArray)
-                        .market(CountryCode.US)
-                        .build();
-                Album[] albumArray = request.execute();
-                if(albumArray != null){
-                    startIndex += 20;
-                    endIndex = (ids.size() - startIndex > 20) ? startIndex + 20 : startIndex + (ids.size() - startIndex);
-                    albums.addAll( Arrays.asList(albumArray) );
-                    albumsToGet -= albumArray.length;
-                }
-
-            } catch(Exception e) {
-                failedAttempts++;
-                try{
-                    Thread.sleep(WAIT_TIME);
-                } catch (InterruptedException ie){
-                    System.err.println("Unlikely to happen.");
-                }
-            }
-        }
-        return albums.toArray(new Album[0]);
-    }
-
-    /**
-     * There are a couple requests provided by the Spotify Web API wrapper that pertain to albums.
-     * The {@link GetArtistsAlbumsRequest} used by this method returns a {@link Paging}<{@link AlbumSimplified}>.
-     * This wouldn't be a problem, except for the fact that {@link AlbumSimplified} objects do not their Tracks as an
-     * attribute. As such rather than getting a {@link Paging}<{@link AlbumSimplified}>, and making a request for each album
-     * to get its tracks, I simply get a List of the albums' ids, and make additional requests for a {@link Paging}<{@link Album}>.
-     * This results in n/20 additional requests to Spotify, where n is the number of albums the artist has. This is actually
-     * better than if I had done a {@link com.wrapper.spotify.requests.data.albums.GetAlbumsTracksRequest} for each album,
-     * which would result in n additional requests to Spotify.
-     * @param spotifyApi The {@link SpotifyApi}
-     * @param artistId The id of the {@link Artist} to retrieve the album ids of.
-     * @return A List<String> of album ids
-     */
-
-    private static List<String> getAlbumIds(SpotifyApi spotifyApi, String artistId){
-
-        ArrayList<String> albumIds = new ArrayList<>();
-        int offset = 0;
-        int itemsAdded = 0;
-        int idsToAdd = Integer.MAX_VALUE;
-        int failedAttempts = 0;
-        Paging<AlbumSimplified> albumsPaging;
-
-        //While all album Ids have not been added and there have not been 10 failed attempts
-        while( (idsToAdd - itemsAdded != 0) && (failedAttempts != MAX_ATTEMPTS) ){
-            final GetArtistsAlbumsRequest albumsRequest = spotifyApi.getArtistsAlbums(artistId)
-                    .market(CountryCode.US)
-                    .album_type("album,single")
-                    .limit(50) //50 is the max that may be returned
-                    .offset(offset)
-                    .build();
-            try{
-                albumsPaging = albumsRequest.execute();
-
-
-                if(albumsPaging != null){
-                    offset += 50;
-                    idsToAdd = albumsPaging.getTotal();
-                    for(AlbumSimplified a: albumsPaging.getItems())
-                        albumIds.add(a.getId());
-                    itemsAdded = albumIds.size();
-                }
-            } catch (Exception e){
-                failedAttempts++;
-                try{
-                    Thread.sleep(WAIT_TIME);
-                } catch (InterruptedException ie){
-                    System.err.println("Unlikely to happen.");
-                }
-            }
-        }
-        return albumIds;
-    }
-
-    /**
-     * Returns a Paging<Artist> for the artist name provided. Since artist names are not necessarily unique, this returns
-     * any artists that may potentially be the one of interest.
-     * @param spotifyApi A SpotifyAPI Object to generate requests
-     * @param artistName The name of an artist
-     * @return Collection of all Artists that have the provided name
-     */
-
-    private static Paging<Artist> getArtistsByName(SpotifyApi spotifyApi, String artistName){
-        if(artistName == null){
-            return new Paging.Builder<Artist>().setItems(new Artist[0]).build();
-        }
-
-        SearchArtistsRequest artReq = spotifyApi.searchArtists(artistName)
-                .market(CountryCode.US)
-                .build();
-
-        try{
-            return artReq.execute();
-        } catch (TooManyRequestsException tmre){ //Too many requests made, wait until we can make more
-
-            int wait = tmre.getRetryAfter() * 1000;
-            System.out.println("TooManyRequestsException in getArtistsByName, waiting for " + wait + " milliseconds");
-            try{
-                Thread.sleep(wait);
-            } catch (InterruptedException ie){
-                ie.printStackTrace();
-            }
-            return getArtistsByName(spotifyApi, artistName);
-        } catch (ServiceUnavailableException sue){ //Unlike TooManyRequestsException we don't know how long to sleep
-            try{
-                Thread.sleep(5000);
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            }
-            return getArtistsByName(spotifyApi, artistName);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return new Paging.Builder<Artist>().setItems(new Artist[0]).build();
-    }
-
-    private static Artist getArtistById(SpotifyApi spotifyApi, String artistID){
-        if(artistID == null){
-            return null;
-        }
-
-        Artist artist = null;
-        GetArtistRequest request = spotifyApi.getArtist(artistID).build();
-        int failedAttempts = 0;
-
-        while( (artist == null) && (failedAttempts != MAX_ATTEMPTS)){
-            try{
-                artist = request.execute();
-            } catch (Exception e){
-                failedAttempts++;
-                try{
-                    Thread.sleep(WAIT_TIME);
-                } catch (InterruptedException ie){
-                    System.err.println("What in tarnation");
-                }
-            }
-        }
-        return artist;
-    }
-
-
     /**
      * Gets a set of any other artists featured on a track.
      * @param artistId The id of the artist whose album the track is on
      * @param track The track
      * @return A Set containing any featured artists
-     */
+
 
     private static Set<String> getFeatured(String artistId, TrackSimplified track){
         Set<String> featured = new HashSet<>();
@@ -344,22 +110,6 @@ public class SpotifyQueries {
         }
         featured.remove(artistId);
         return featured;
-    }
-
-    private static AudioFeatures[] getAudioFeaturesForTracks(SpotifyApi spotifyApi, String[] trackIds){
-        GetAudioFeaturesForSeveralTracksRequest request = spotifyApi.getAudioFeaturesForSeveralTracks(trackIds)
-                .build();
-
-        AudioFeatures[] features = new AudioFeatures[0];
-        int failedAttempts = 0;
-        while ((features.length != trackIds.length) && (failedAttempts != MAX_ATTEMPTS)){
-            try{
-                features = request.execute();
-            } catch (Exception e){
-                failedAttempts++;
-            }
-        }
-        return features;
     }
 
     private static Document retrieveArtistInfo(SpotifyApi spotifyApi, Artist artist){
@@ -479,4 +229,5 @@ public class SpotifyQueries {
             refreshTokens(usersCollection, username);
         }
     }
+    */
 }

@@ -17,6 +17,7 @@ import java.util.Map;
 import static spark.Spark.get;
 
 public class GetAccessToken {
+    /*
     public static void main(String[] args) {
         Configuration config = new Configuration();
         config.setClassForTemplateLoading(GetAccessToken.class, "/");
@@ -74,4 +75,5 @@ public class GetAccessToken {
         }
         return null;
     }
+    */
 }

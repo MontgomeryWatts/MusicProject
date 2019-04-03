@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 public class AddArtists {
 
+    /*
     public static void main(String[] args) {
         MongoConnection db = new MongoConnection();
         System.out.println(db.getNumberOfArtists());
@@ -28,7 +29,7 @@ public class AddArtists {
      * Reads in from a file a list of artists to add to the database
      * @param path The path to the file containing the artists' names
      * @return A List containing the artists names
-     */
+
 
     private static List<String> getArtistNames(String path){
         List<String> artists = new ArrayList<>();
@@ -44,5 +45,5 @@ public class AddArtists {
 
         return artists;
     }
-
+*/
 }
