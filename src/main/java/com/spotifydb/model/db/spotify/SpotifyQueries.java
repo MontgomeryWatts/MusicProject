@@ -21,7 +21,6 @@ import com.wrapper.spotify.requests.data.search.simplified.SearchArtistsRequest;
 import com.wrapper.spotify.requests.data.tracks.GetAudioFeaturesForSeveralTracksRequest;
 import org.bson.Document;
 
-import java.io.File;
 import java.net.URI;
 import java.util.*;
 
@@ -162,7 +161,18 @@ public class SpotifyQueries {
         return null;
     }
 
-    private static Album[] getAlbums(SpotifyApi spotifyApi, List<String> ids){
+    public static Album[] getAlbumsByArtist(Artist artist){
+        SpotifyApi spotifyApi = createSpotifyAPI();
+        if (spotifyApi == null){
+            return null; //Indicate there was an error, not that an artist has no albums
+        }
+
+        String artistId = artist.getId();
+        List<String> albumIds = getAlbumIds(spotifyApi, artistId);
+        return getAlbumsById(spotifyApi, albumIds);
+    }
+
+    private static Album[] getAlbumsById(SpotifyApi spotifyApi, List<String> ids){
         int albumsToGet = ids.size();
         if(albumsToGet == 0)
             return new Album[0];
@@ -190,12 +200,26 @@ public class SpotifyQueries {
                 try{
                     Thread.sleep(WAIT_TIME);
                 } catch (InterruptedException ie){
-                    System.err.println("please don't happen..");
+                    System.err.println("Unlikely to happen.");
                 }
             }
         }
         return albums.toArray(new Album[0]);
     }
+
+    /**
+     * There are a couple requests provided by the Spotify Web API wrapper that pertain to albums.
+     * The {@link GetArtistsAlbumsRequest} used by this method returns a {@link Paging}<{@link AlbumSimplified}>.
+     * This wouldn't be a problem, except for the fact that {@link AlbumSimplified} objects do not their Tracks as an
+     * attribute. As such rather than getting a {@link Paging}<{@link AlbumSimplified}>, and making a request for each album
+     * to get its tracks, I simply get a List of the albums' ids, and make additional requests for a {@link Paging}<{@link Album}>.
+     * This results in n/20 additional requests to Spotify, where n is the number of albums the artist has. This is actually
+     * better than if I had done a {@link com.wrapper.spotify.requests.data.albums.GetAlbumsTracksRequest} for each album,
+     * which would result in n additional requests to Spotify.
+     * @param spotifyApi The {@link SpotifyApi}
+     * @param artistId The id of the {@link Artist} to retrieve the album ids of.
+     * @return A List<String> of album ids
+     */
 
     private static List<String> getAlbumIds(SpotifyApi spotifyApi, String artistId){
 
@@ -230,7 +254,7 @@ public class SpotifyQueries {
                 try{
                     Thread.sleep(WAIT_TIME);
                 } catch (InterruptedException ie){
-                    System.err.println("please don't happen..");
+                    System.err.println("Unlikely to happen.");
                 }
             }
         }
@@ -354,7 +378,7 @@ public class SpotifyQueries {
 
         List<String> genres = Arrays.asList(artist.getGenres());
         List<String> albumIds = getAlbumIds(spotifyApi, uri);
-        Album[] albums = getAlbums(spotifyApi, albumIds);
+        Album[] albums = getAlbumsById(spotifyApi, albumIds);
 
         if(albums.length == 0) //Only add artists with music
             return null;
