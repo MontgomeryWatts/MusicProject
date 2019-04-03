@@ -7,6 +7,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import com.spotifydb.model.db.spotify.AddReferencedArtists;
+import com.wrapper.spotify.model_objects.specification.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import com.spotifydb.ui.controllers.ArtistController;
@@ -198,12 +199,16 @@ public class MongoConnection extends DatabaseConnection {
 
     /**
      * Attempt to insert an artist document into the collection.
-     * @param artistDoc The document to insert
      * @return True if the document was inserted, else false.
      */
 
     @Override
-    public boolean insertArtist(Document artistDoc) {
+    public boolean insertArtist(Artist artist, Album[] albums) {
+        if(albums.length == 0) //Only add artists with music, only implemented because storage costs money!
+            return false;
+
+        Document artistDoc = createArtistDoc(artist, albums);
+
         if(artistDoc != null) {
             try {
                 collection.insertOne(artistDoc);
@@ -213,6 +218,81 @@ public class MongoConnection extends DatabaseConnection {
             }
         }
         return false;
+    }
+
+    private Document createArtistDoc(Artist artist, Album[] albums){
+        String id = artist.getId();
+        List<String> genres = Arrays.asList(artist.getGenres());
+        List<String> imageUrls = new ArrayList<>();
+        Image[] images = artist.getImages();
+        for(Image image: images)
+            imageUrls.add(image.getUrl());
+
+        Document artistDoc = new Document("_id", id)
+                .append("name", artist.getName())
+                .append("images", imageUrls);
+
+        if(genres.size() != 0){
+            artistDoc.append("genres", genres);
+        }
+
+        if(albums.length != 0) {
+            List<Document> albumDocs = createAlbumDocuments(id, albums);
+            artistDoc.append("albums", albumDocs);
+        }
+
+        return artistDoc;
+    }
+
+    private List<Document> createAlbumDocuments(String artistId, Album[] albums){
+        List<Document> albumDocuments = new ArrayList<>();
+        for (Album album: albums) {
+            int year = Integer.parseInt(album.getReleaseDate().substring(0, 4)); //Dates are in YYYY-MM-DD format
+            Document albumDoc = new Document("title", album.getName())
+                    .append("uri", album.getUri())
+                    .append("year", year);
+
+
+            Image[] albumImages = album.getImages();
+            if(albumImages.length != 0) {
+                albumDoc.append("image", albumImages[0].getUrl()); //The first image in the images array is the largest
+            }
+
+            List<Document> songDocuments = createSongDocuments(artistId, album);
+            albumDoc.append("songs", songDocuments);
+            albumDocuments.add(albumDoc);
+        }
+        return albumDocuments;
+    }
+
+
+    private List<Document> createSongDocuments(String artistId, Album album){
+        List<Document> songDocuments = new ArrayList<>();
+
+        TrackSimplified[] tracks = album.getTracks().getItems();
+        for(TrackSimplified track: tracks){
+            Document songDoc = new Document("title", track.getName())
+                    .append("duration", track.getDurationMs() / 1000)
+                    .append("explicit", track.getIsExplicit())
+                    .append("uri", track.getUri());
+
+            Set<String> featured= getFeatured(artistId, track);
+            if(!featured.isEmpty()) {
+                songDoc.append("featured", featured);
+            }
+
+            songDocuments.add(songDoc);
+        }
+        return songDocuments;
+    }
+
+    private Set<String> getFeatured(String artistId, TrackSimplified track) {
+        Set<String> featured = new HashSet<>();
+        for (ArtistSimplified a : track.getArtists()) {
+            featured.add(a.getId());
+        }
+        featured.remove(artistId);
+        return featured;
     }
 
     /**
