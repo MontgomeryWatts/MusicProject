@@ -1,5 +1,7 @@
 package com.spotifydb.model.db.daos;
 
+import com.wrapper.spotify.model_objects.specification.Album;
+import com.wrapper.spotify.model_objects.specification.Artist;
 import org.bson.Document;
 
 import java.util.List;
@@ -18,5 +20,5 @@ public interface ArtistDAO {
     List<Document> getArtists(int offset, int limit);
     List<Document> getArtistsByRandom();
 
-    boolean insertArtist(Document artistDoc);
+    boolean insertArtist(Artist artist, Album[] albums);
 }
