@@ -28,6 +28,7 @@ public class DatabaseService {
     public Document getArtist(String uri){
         return db.getArtistByUri(uri);
     }
+    public Iterable<String> getSimilarArtistNames(String name, int offset, int limit) { return db.getSimilarArtistNames(name, offset, limit);}
     public List<Document> getArtists(){
         return db.getArtistsByRandom();
     }

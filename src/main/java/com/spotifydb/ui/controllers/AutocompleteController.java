@@ -18,11 +18,10 @@ public class AutocompleteController {
 
     @PostMapping("")
     @ResponseBody
-    public List<Document> getAjaxResult(@RequestBody String query){
+    public Iterable<String> getAjaxResult(@RequestBody String query){
         int equalsIndex = query.indexOf('='); // The query is passed in as q={query}
         query = query.substring(equalsIndex + 1);
-        List<Document> artists = service.getArtistsByLikeName(query, 0, 10);
-        return artists;
+        return service.getSimilarArtistNames(query, 0, 10);
     }
 
 }

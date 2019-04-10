@@ -11,9 +11,7 @@ $('#artist_input').autocomplete({
                     q: request.term
                 },
                 success: function (data){
-                    // This mapping assumes Mongo is being used,
-                    // Should be changed in the future.
-                    response(data.map(artist => artist.name));
+                    response(data);
                 }
             }
         );

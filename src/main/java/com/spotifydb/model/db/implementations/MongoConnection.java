@@ -1,5 +1,6 @@
 package com.spotifydb.model.db.implementations;
 
+import com.mongodb.Function;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoWriteException;
@@ -23,7 +24,7 @@ import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
 
-public class MongoConnection extends DatabaseConnection {
+public class MongoConnection implements DatabaseConnection {
     private MongoCollection<Document> collection;
     private static final int SMALL_SAMPLE_SIZE = 20;
     private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
@@ -142,6 +143,24 @@ public class MongoConnection extends DatabaseConnection {
                 skip(offset),
                 limit(limit)
         )).into(new ArrayList<>());
+    }
+
+    @Override
+    public Iterable<String> getSimilarArtistNames(String name, int offset, int limit) {
+        name = name.replace('+', ' '); // jQuery replaces spaces with +'s
+        Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
+        return  collection.aggregate(
+                Arrays.asList(
+                        match(Filters.regex("name", namePattern)),
+                        project(Projections.include("name")),
+                        skip(offset),
+                        limit(limit)
+                )).map(new Function<Document, String>() {
+                        @Override
+                        public String apply(Document document) {
+                            return document.getString("name");
+                        }
+        });
     }
 
 
