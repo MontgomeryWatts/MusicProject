@@ -155,12 +155,7 @@ public class MongoConnection implements DatabaseConnection {
                         project(Projections.include("name")),
                         skip(offset),
                         limit(limit)
-                )).map(new Function<Document, String>() {
-                        @Override
-                        public String apply(Document document) {
-                            return document.getString("name");
-                        }
-        });
+                )).map((Document document) -> document.getString("name"));
     }
 
 
