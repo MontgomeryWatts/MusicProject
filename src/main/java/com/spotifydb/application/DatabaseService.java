@@ -1,6 +1,7 @@
 package com.spotifydb.application;
 
 
+import com.spotifydb.model.Preview;
 import com.spotifydb.model.db.implementations.DatabaseConnection;
 import com.spotifydb.model.db.implementations.MongoConnection;
 import org.bson.Document;
@@ -29,16 +30,14 @@ public class DatabaseService {
         return db.getArtistByUri(uri);
     }
     public Iterable<String> getSimilarArtistNames(String name, int offset, int limit) { return db.getSimilarArtistNames(name, offset, limit);}
-    public List<Document> getArtists(){
+    public Iterable<Preview> getArtistsByRandom(){
         return db.getArtistsByRandom();
     }
-    public List<Document> getArtistsByGenre(String genre, int offset, int limit){
+    public Iterable<Preview> getArtistsByGenre(String genre, int offset, int limit){
         return db.getArtistsByGenre(genre, offset, limit);
     }
-    public List<Document> getArtistsByLikeName(String name, int offset, int limit){
-        return db.getArtistsByLikeName(name, offset, limit);
-    }
-    public List<Document> getArtistsByName(String name, int offset, int limit){
+
+    public Iterable<Preview> getArtistsByName(String name, int offset, int limit){
         return db.getArtistsByName(name, offset, limit);
     }
     public List<String> getAllGenres(){

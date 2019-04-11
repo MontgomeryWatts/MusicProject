@@ -9,25 +9,19 @@
         <#include "navbar.ftl">
         <div class="container">
              <#if artists?has_content>
-                <#list artists?chunk(2) as row>
-                    <div class="row">
-                    <#list row as artist>
-                        <#if artist["images"]?has_content>
+                    <#list artists.iterator() as artist>
                         <div class="col-xs-10 col-xs-offset-2 col-md-offset-0 col-md-6 no-text-overflow">
                             <div class="container-fluid">
-                                <a href="/artists/${artist["_id"]}">
-                                    <img src="${artist["images"][1]}" class="artist-preview">
+                                <a href="/artists/${artist.id}">
+                                    <img src="${artist.imageUrl}" class="artist-preview">
                                 </a>
                                 <span>&nbsp;</span>
-                                <a href="spotify:artist:${artist["_id"]}">
-                                    ${artist["name"]}
+                                <a href="spotify:artist:${artist.id}">
+                                    ${artist.text}
                                 </a>
                             </div>
                         </div>
-                        </#if>
                     </#list>
-                    </div>
-                </#list>
                  <nav>
                      <ul class="pager">
                          <#if RequestParameters.p??>
