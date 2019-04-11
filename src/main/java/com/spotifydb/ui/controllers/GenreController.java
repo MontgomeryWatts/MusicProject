@@ -2,7 +2,6 @@ package com.spotifydb.ui.controllers;
 
 import com.spotifydb.model.Preview;
 import com.spotifydb.model.db.queries.DatabaseQueries;
-import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -63,9 +62,12 @@ public class GenreController {
         model.addAttribute("prevLink", prevLink);
         model.addAttribute("nextLink", nextLink);
 
+        int artistSize = 0;
+        for (Preview artist: artists)
+            artistSize++;
 
-        //if(artists. + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
-          //  model.addAttribute("hasNext", true);
+        if(artistSize + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
+            model.addAttribute("hasNext", true);
         return "artists";
     }
 
