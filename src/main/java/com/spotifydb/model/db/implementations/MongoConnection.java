@@ -329,6 +329,21 @@ public class MongoConnection extends DatabaseConnection {
         return (genresDoc != null) ? (ArrayList<String>) genresDoc.get("genres") : new ArrayList<>();
     }
 
+    @Override
+    public Iterable<String> getSimilarGenres(String genre, int offset, int limit){
+        genre = genre.replace('+', ' '); // jQuery replaces spaces with +'s
+        Pattern genrePattern = Pattern.compile(genre, Pattern.CASE_INSENSITIVE);
+        return collection.aggregate(
+                Arrays.asList(
+                        unwind("$genres"),
+                        match(Filters.regex("genres", genrePattern)),
+                        project(include("genres")),
+                        group("$genres", new ArrayList<>()),
+                        skip(offset),
+                        limit(limit)
+                )).map((Document doc) -> doc.getString("_id"));
+    }
+
 
     /**
      * Determines which genre is the 'nth' most popular, e.g. passing 1 will find the most popular genre.

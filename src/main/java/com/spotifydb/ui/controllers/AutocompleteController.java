@@ -16,12 +16,20 @@ public class AutocompleteController {
     @Autowired
     private DatabaseService service;
 
-    @PostMapping("")
+    @PostMapping("/names")
     @ResponseBody
-    public Iterable<String> getAjaxResult(@RequestBody String query){
+    public Iterable<String> getSimilarArtistNames(@RequestBody String query){
         int equalsIndex = query.indexOf('='); // The query is passed in as q={query}
         query = query.substring(equalsIndex + 1);
         return service.getSimilarArtistNames(query, 0, 10);
     }
 
+    @PostMapping("/genres")
+    @ResponseBody
+    public Iterable<String> getSimilarGenres(@RequestBody String query){
+        int equalsIndex = query.indexOf('='); // The query is passed in as q={query}
+        query = query.substring(equalsIndex + 1);
+        Iterable<String> genres = service.getSimilarGenres(query, 0, 10);;
+        return genres;
+    }
 }

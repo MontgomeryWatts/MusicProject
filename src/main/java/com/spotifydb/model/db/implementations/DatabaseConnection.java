@@ -27,6 +27,7 @@ public abstract class DatabaseConnection {
     //Genre specific methods
     public abstract List<String> getGenres();
     public abstract List<String> getGenresByLetter(char c);
+    public abstract Iterable<String> getSimilarGenres(String genre, int offset, int limit);
     public abstract String getNthPopularGenre(int n);
 
     //Song specific methods

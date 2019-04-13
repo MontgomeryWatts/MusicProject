@@ -44,6 +44,9 @@ public class DatabaseService {
         return db.getGenres();
     }
     public List<String> getGenresByLetter(char letter){ return db.getGenresByLetter(letter);}
+    public Iterable<String> getSimilarGenres(String genre, int offset, int limit){
+        return db.getSimilarGenres(genre, offset, limit);
+    }
     public long getNumArtistsByGenre(String genre){
         return db.getNumberOfArtistsByGenre(genre);
     }

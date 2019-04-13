@@ -13,7 +13,7 @@
             </div>
 
             <div class="form-group">
-                <input type="text" placeholder="Genre" name="genre_input" id="genre_input">
+                <input type="text" placeholder="Genre" name="genre_input" id="genre_input" onkeydown="suggest('genre_input', 'genres')">
             </div>
 
             <div class="form-group">
