@@ -51,7 +51,7 @@ public class GenreController {
 
         int offset = DatabaseQueries.SMALL_SAMPLE_SIZE * (page - 1);
         int limit = DatabaseQueries.SMALL_SAMPLE_SIZE;
-        Iterable<Preview> artists = service.getArtistsByGenre(genre, offset, limit);
+        List<Preview> artists = service.getArtistsByGenre(genre, offset, limit);
 
         model.addAttribute("artists", artists);
         model.addAttribute("title", genre + " artists");
@@ -62,11 +62,7 @@ public class GenreController {
         model.addAttribute("prevLink", prevLink);
         model.addAttribute("nextLink", nextLink);
 
-        int artistSize = 0;
-        for (Preview artist: artists)
-            artistSize++;
-
-        if(artistSize + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
+        if(artists.size() + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
             model.addAttribute("hasNext", true);
         return "artists";
     }

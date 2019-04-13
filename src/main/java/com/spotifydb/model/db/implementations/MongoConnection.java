@@ -119,12 +119,12 @@ public class MongoConnection extends DatabaseConnection {
      * @return A List of random artist Documents
      */
     @Override
-    public Iterable<Preview> getArtistsByRandom(){
+    public List<Preview> getArtistsByRandom(){
         return collection.aggregate(Arrays.asList(
                 sample(LARGE_SAMPLE_SIZE),
                 project(include("images", "name")),
                 limit(SMALL_SAMPLE_SIZE)
-        )).map( MongoConnection::createPreviewFromArtistDoc );
+        )).map( MongoConnection::createPreviewFromArtistDoc ).into(new ArrayList<>());
     }
 
     /**
@@ -147,13 +147,13 @@ public class MongoConnection extends DatabaseConnection {
      */
 
     @Override
-    public Iterable<Preview> getArtistsByGenre(String genre, int offset, int limit) {
+    public List<Preview> getArtistsByGenre(String genre, int offset, int limit) {
         return collection.aggregate(Arrays.asList(
                 match( eq("genres", genre)),
                 project(include("images", "name")),
                 skip(offset),
                 limit(limit)
-        )).map( MongoConnection::createPreviewFromArtistDoc );
+        )).map( MongoConnection::createPreviewFromArtistDoc ).into(new ArrayList<>());
     }
 
     @Override
@@ -180,7 +180,7 @@ public class MongoConnection extends DatabaseConnection {
      */
 
     @Override
-    public Iterable<Preview> getArtistsByName(String name, int offset, int limit) {
+    public List<Preview> getArtistsByName(String name, int offset, int limit) {
         String searchPhrase = "\"" + name.trim() + "\"";
         Document nameFilter = new Document("$text", new Document("$search", searchPhrase));
         return  collection.aggregate(
@@ -189,7 +189,8 @@ public class MongoConnection extends DatabaseConnection {
                         project(include("images", "name")),
                         skip(offset),
                         limit(limit)
-                )).map( MongoConnection::createPreviewFromArtistDoc );
+                )).map( MongoConnection::createPreviewFromArtistDoc )
+                .into(new ArrayList<>());
     }
 
     /**

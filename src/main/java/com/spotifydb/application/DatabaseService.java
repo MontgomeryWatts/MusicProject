@@ -30,14 +30,14 @@ public class DatabaseService {
         return db.getArtistByUri(uri);
     }
     public Iterable<String> getSimilarArtistNames(String name, int offset, int limit) { return db.getSimilarArtistNames(name, offset, limit);}
-    public Iterable<Preview> getArtistsByRandom(){
+    public List<Preview> getArtistsByRandom(){
         return db.getArtistsByRandom();
     }
-    public Iterable<Preview> getArtistsByGenre(String genre, int offset, int limit){
+    public List<Preview> getArtistsByGenre(String genre, int offset, int limit){
         return db.getArtistsByGenre(genre, offset, limit);
     }
 
-    public Iterable<Preview> getArtistsByName(String name, int offset, int limit){
+    public List<Preview> getArtistsByName(String name, int offset, int limit){
         return db.getArtistsByName(name, offset, limit);
     }
     public List<String> getAllGenres(){

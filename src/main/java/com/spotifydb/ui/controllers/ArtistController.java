@@ -20,7 +20,7 @@ public class ArtistController {
 
     @GetMapping("")
     public String artists(Model model){
-        Iterable<Preview> artists = service.getArtistsByRandom();
+        List<Preview> artists = service.getArtistsByRandom();
         model.addAttribute("artists", artists);
         model.addAttribute("title", "Displays random artists");
         return "artists";
