@@ -23,6 +23,7 @@ import static com.mongodb.client.model.Aggregates.skip;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
+import static com.mongodb.client.model.Projections.*;
 
 public class MongoConnection implements DatabaseConnection {
     private MongoCollection<Document> collection;
@@ -86,7 +87,7 @@ public class MongoConnection implements DatabaseConnection {
     public String getRandomArtistUri(){
         Document randomArtistDoc = collection.aggregate(Arrays.asList(
                 sample(SMALL_SAMPLE_SIZE),
-                project(Projections.include("_id"))
+                project(include("_id"))
         )).first();
         return randomArtistDoc.getString("_id");
     }
@@ -121,6 +122,7 @@ public class MongoConnection implements DatabaseConnection {
     public Iterable<Preview> getArtistsByRandom(){
         return collection.aggregate(Arrays.asList(
                 sample(LARGE_SAMPLE_SIZE),
+                project(include("images", "name")),
                 limit(SMALL_SAMPLE_SIZE)
         )).map( MongoConnection::createPreviewFromArtistDoc );
     }
@@ -148,6 +150,7 @@ public class MongoConnection implements DatabaseConnection {
     public Iterable<Preview> getArtistsByGenre(String genre, int offset, int limit) {
         return collection.aggregate(Arrays.asList(
                 match( eq("genres", genre)),
+                project(include("images", "name")),
                 skip(offset),
                 limit(limit)
         )).map( MongoConnection::createPreviewFromArtistDoc );
@@ -160,7 +163,7 @@ public class MongoConnection implements DatabaseConnection {
         return  collection.aggregate(
                 Arrays.asList(
                         match(Filters.regex("name", namePattern)),
-                        project(Projections.include("name")),
+                        project(include("name")),
                         skip(offset),
                         limit(limit)
                 )).map((Document document) -> document.getString("name"));
@@ -183,6 +186,7 @@ public class MongoConnection implements DatabaseConnection {
         return  collection.aggregate(
                 Arrays.asList(
                         match(nameFilter),
+                        project(include("images", "name")),
                         skip(offset),
                         limit(limit)
                 )).map( MongoConnection::createPreviewFromArtistDoc );
@@ -338,7 +342,7 @@ public class MongoConnection implements DatabaseConnection {
                 skip(n-1),
                 limit(1)
         )).first();
-        return countDoc != null ? countDoc.getString("_id"): null;
+        return (countDoc != null) ? countDoc.getString("_id") : null;
     }
 
     /**
@@ -350,7 +354,7 @@ public class MongoConnection implements DatabaseConnection {
         Document songsDoc = collection.aggregate(
                 Arrays.asList(
                         unwind("$albums"),
-                        project(Projections.computed("numSongs",
+                        project(computed("numSongs",
                                 new Document("$size", "$albums.songs"))
                         ),
                         group(null, Accumulators.sum("totalSongs", "$numSongs"))
