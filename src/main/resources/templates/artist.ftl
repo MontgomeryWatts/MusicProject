@@ -10,9 +10,14 @@
         <div class="container">
             <#if artist??>
                 <h1>${artist["name"]}</h1>
-            <#if artist["images"]?has_content>
-                <img src="${artist["images"][1]}" class="artist-preview">
-            </#if>
+                <img src=
+                    <#if artist["images"]?has_content>
+                        "${artist["images"][1]}"
+                    <#else>
+                        "/images/blank_profile_pic.png"
+                    </#if>
+                class="artist-preview">
+
                 <br>
                 <br>
                 <h2>Genres</h2>

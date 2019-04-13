@@ -1,7 +1,7 @@
 package com.spotifydb.ui.controllers;
 
+import com.spotifydb.model.Preview;
 import com.spotifydb.model.db.queries.DatabaseQueries;
-import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -51,7 +51,8 @@ public class GenreController {
 
         int offset = DatabaseQueries.SMALL_SAMPLE_SIZE * (page - 1);
         int limit = DatabaseQueries.SMALL_SAMPLE_SIZE;
-        List<Document> artists = service.getArtistsByGenre(genre, offset, limit);
+        Iterable<Preview> artists = service.getArtistsByGenre(genre, offset, limit);
+
         model.addAttribute("artists", artists);
         model.addAttribute("title", genre + " artists");
 
@@ -61,7 +62,11 @@ public class GenreController {
         model.addAttribute("prevLink", prevLink);
         model.addAttribute("nextLink", nextLink);
 
-        if(artists.size() + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
+        int artistSize = 0;
+        for (Preview artist: artists)
+            artistSize++;
+
+        if(artistSize + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
             model.addAttribute("hasNext", true);
         return "artists";
     }

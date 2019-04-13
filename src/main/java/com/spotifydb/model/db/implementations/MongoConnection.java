@@ -1,12 +1,12 @@
 package com.spotifydb.model.db.implementations;
 
-import com.mongodb.Function;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoWriteException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
+import com.spotifydb.model.Preview;
 import com.spotifydb.model.db.spotify.AddReferencedArtists;
 import com.wrapper.spotify.model_objects.specification.*;
 import org.bson.Document;
@@ -23,8 +23,9 @@ import static com.mongodb.client.model.Aggregates.skip;
 import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
+import static com.mongodb.client.model.Projections.*;
 
-public class MongoConnection implements DatabaseConnection {
+public class MongoConnection extends DatabaseConnection {
     private MongoCollection<Document> collection;
     private static final int SMALL_SAMPLE_SIZE = 20;
     private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
@@ -45,6 +46,14 @@ public class MongoConnection implements DatabaseConnection {
     private static MongoClientURI getMongoClientUri(){
         String envVariable = System.getenv("MONGODB_URI");
         return (envVariable != null) ? new MongoClientURI(envVariable) : new MongoClientURI("mongodb://localhost:27017/spotifydb");
+    }
+
+    private static Preview createPreviewFromArtistDoc(Document doc){
+        List<String> imageUrls = (ArrayList<String>) doc.get("images");
+        String imageUrl = (imageUrls.size() != 0) ? imageUrls.get(0) : BLANK_PROFILE;
+        String id = doc.getString("_id");
+        String text = doc.getString("name");
+        return new Preview(id, imageUrl, text);
     }
 
 
@@ -78,7 +87,7 @@ public class MongoConnection implements DatabaseConnection {
     public String getRandomArtistUri(){
         Document randomArtistDoc = collection.aggregate(Arrays.asList(
                 sample(SMALL_SAMPLE_SIZE),
-                project(Projections.include("_id"))
+                project(include("_id"))
         )).first();
         return randomArtistDoc.getString("_id");
     }
@@ -110,11 +119,12 @@ public class MongoConnection implements DatabaseConnection {
      * @return A List of random artist Documents
      */
     @Override
-    public List<Document> getArtistsByRandom(){
+    public Iterable<Preview> getArtistsByRandom(){
         return collection.aggregate(Arrays.asList(
                 sample(LARGE_SAMPLE_SIZE),
+                project(include("images", "name")),
                 limit(SMALL_SAMPLE_SIZE)
-        )).into(new ArrayList<>());
+        )).map( MongoConnection::createPreviewFromArtistDoc );
     }
 
     /**
@@ -137,12 +147,13 @@ public class MongoConnection implements DatabaseConnection {
      */
 
     @Override
-    public List<Document> getArtistsByGenre(String genre, int offset, int limit) {
+    public Iterable<Preview> getArtistsByGenre(String genre, int offset, int limit) {
         return collection.aggregate(Arrays.asList(
                 match( eq("genres", genre)),
+                project(include("images", "name")),
                 skip(offset),
                 limit(limit)
-        )).into(new ArrayList<>());
+        )).map( MongoConnection::createPreviewFromArtistDoc );
     }
 
     @Override
@@ -152,25 +163,11 @@ public class MongoConnection implements DatabaseConnection {
         return  collection.aggregate(
                 Arrays.asList(
                         match(Filters.regex("name", namePattern)),
-                        project(Projections.include("name")),
+                        project(include("name")),
                         skip(offset),
                         limit(limit)
                 )).map((Document document) -> document.getString("name"));
     }
-
-
-    @Override
-    public List<Document> getArtistsByLikeName(String name, int offset, int limit) {
-        name = name.replace('+', ' '); // jQuery replaces spaces with +'s
-        Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
-        return  collection.aggregate(
-                Arrays.asList(
-                        match(Filters.regex("name", namePattern)),
-                        skip(offset),
-                        limit(limit)
-                )).into(new ArrayList<>());
-    }
-
 
     /**
      * Retrieves a List of artist documents from the artists collection, performing a case-insensitive text search
@@ -183,32 +180,16 @@ public class MongoConnection implements DatabaseConnection {
      */
 
     @Override
-    public List<Document> getArtistsByName(String name, int offset, int limit) {
+    public Iterable<Preview> getArtistsByName(String name, int offset, int limit) {
         String searchPhrase = "\"" + name.trim() + "\"";
         Document nameFilter = new Document("$text", new Document("$search", searchPhrase));
         return  collection.aggregate(
                 Arrays.asList(
                         match(nameFilter),
+                        project(include("images", "name")),
                         skip(offset),
                         limit(limit)
-                )).into(new ArrayList<>());
-    }
-
-    /**
-     * Gets a list of artist Documents. No criterion is passed, so this would be of use when
-     * scrolling through all artists in the database. Offset and limit are included for pagination purposes.
-     * @param offset How many artist documents to skip.
-     * @param limit How many artist documents to return up to.
-     * @return A List of artist Documents.
-     */
-    @Override
-    public List<Document> getArtists(int offset, int limit) {
-        return collection.aggregate(
-                Arrays.asList(
-                        skip(offset),
-                        limit(limit)
-                )
-        ).into(new ArrayList<>());
+                )).map( MongoConnection::createPreviewFromArtistDoc );
     }
 
     /**
@@ -361,7 +342,7 @@ public class MongoConnection implements DatabaseConnection {
                 skip(n-1),
                 limit(1)
         )).first();
-        return countDoc != null ? countDoc.getString("_id"): null;
+        return (countDoc != null) ? countDoc.getString("_id") : null;
     }
 
     /**
@@ -373,7 +354,7 @@ public class MongoConnection implements DatabaseConnection {
         Document songsDoc = collection.aggregate(
                 Arrays.asList(
                         unwind("$albums"),
-                        project(Projections.computed("numSongs",
+                        project(computed("numSongs",
                                 new Document("$size", "$albums.songs"))
                         ),
                         group(null, Accumulators.sum("totalSongs", "$numSongs"))
