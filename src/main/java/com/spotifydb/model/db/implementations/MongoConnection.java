@@ -25,7 +25,7 @@ import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
 import static com.mongodb.client.model.Projections.*;
 
-public class MongoConnection implements DatabaseConnection {
+public class MongoConnection extends DatabaseConnection {
     private MongoCollection<Document> collection;
     private static final int SMALL_SAMPLE_SIZE = 20;
     private static final int LARGE_SAMPLE_SIZE = SMALL_SAMPLE_SIZE * 10;
@@ -50,8 +50,8 @@ public class MongoConnection implements DatabaseConnection {
 
     private static Preview createPreviewFromArtistDoc(Document doc){
         List<String> imageUrls = (ArrayList<String>) doc.get("images");
+        String imageUrl = (imageUrls.size() != 0) ? imageUrls.get(0) : BLANK_PROFILE;
         String id = doc.getString("_id");
-        String imageUrl = imageUrls.get(0);
         String text = doc.getString("name");
         return new Preview(id, imageUrl, text);
     }
