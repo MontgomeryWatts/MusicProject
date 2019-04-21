@@ -10,12 +10,13 @@ import java.util.Set;
 
 public abstract class DatabaseConnection {
     protected static String BLANK_PROFILE = "/images/blank_profile_pic.png";
+    public static int RESULTS_PER_PAGE = 20;
 
     //Artist specific methods
     public abstract Document getArtistByUri(String artistUri);
     public abstract String getRandomArtistUri();
-    public abstract long getNumberOfArtists();
-    public abstract long getNumberOfArtistsByGenre(String genre);
+    public abstract long getNumArtists();
+    public abstract long getNumArtistsBy(String genre, String name);
     public abstract Set<String> getAllFeaturedArtists();
     public abstract Set<String> getAllArtistUris();
     public abstract Iterable<String> getSimilarArtistNames(String name, int offset, int limit);

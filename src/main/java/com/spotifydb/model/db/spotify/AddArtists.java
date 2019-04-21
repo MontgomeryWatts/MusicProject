@@ -16,7 +16,7 @@ public class AddArtists {
     public static void main(String[] args) {
         DatabaseConnection db = new MongoConnection();
         SpotifyConnection sc = new SpotifyConnection();
-        System.out.println(db.getNumberOfArtists());
+        System.out.println(db.getNumArtists());
 
         for(String name: getArtistNames("src/main/resources/artistNames.txt")){
             Paging<Artist> artists = sc.getArtistsByName(name);
@@ -27,7 +27,7 @@ public class AddArtists {
 
         }
 
-        System.out.println(db.getNumberOfArtists());
+        System.out.println(db.getNumArtists());
     }
     /**
      * Reads in from a file a list of artists to add to the database

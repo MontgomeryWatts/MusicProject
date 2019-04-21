@@ -30,10 +30,8 @@
                  <nav>
 
                      <ul class="pager">
-                         <#if RequestParameters.p??>
-                             <#if RequestParameters.p?number gte 2>
+                         <#if hasPrev??>
                             <li class="previous"><a style="color:black" href="${prevLink}"><span>←  </span>Previous</a></li>
-                             </#if>
                          </#if>
 
                          <#if hasNext??>

@@ -48,8 +48,8 @@ public class DatabaseService {
         return db.getGenres();
     }
     public List<String> getGenresByLetter(char letter){ return db.getGenresByLetter(letter);}
-    public long getNumArtistsByGenre(String genre){
-        return db.getNumberOfArtistsByGenre(genre);
+    public long getNumArtistsBy(String genre, String name){
+        return db.getNumArtistsBy(genre, name);
     }
     public String getRandomArtistURI(){return db.getRandomArtistUri();}
 }

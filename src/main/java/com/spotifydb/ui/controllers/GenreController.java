@@ -62,8 +62,8 @@ public class GenreController {
         model.addAttribute("prevLink", prevLink);
         model.addAttribute("nextLink", nextLink);
 
-        if(artists.size() + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
-            model.addAttribute("hasNext", true);
+        //if(artists.size() + (DatabaseQueries.SMALL_SAMPLE_SIZE * --page) < service.getNumArtistsByGenre(genre))
+          //  model.addAttribute("hasNext", true);
         return "artists";
     }
 
