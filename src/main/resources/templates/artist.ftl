@@ -25,7 +25,7 @@
                     <table>
                         <tr>
                         <#list artist["genres"] as genre>
-                            <a href="/search?type=artist&genre=${genre}&page=1" class="tag">${genre}</a>
+                            <a href="/search?type=artist&genre=${genre?replace('&', '%26')}&page=1" class="tag">${genre}</a>
                         </#list>
                         </tr>
                     </table>
