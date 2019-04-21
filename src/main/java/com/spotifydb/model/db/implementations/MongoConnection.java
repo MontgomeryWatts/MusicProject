@@ -148,17 +148,46 @@ public class MongoConnection extends DatabaseConnection {
 
     @Override
     public List<Preview> getArtistsByGenre(String genre, int offset, int limit) {
-        return collection.aggregate(Arrays.asList(
-                match( eq("genres", genre)),
-                project(include("images", "name")),
-                skip(offset),
-                limit(limit)
-        )).map( MongoConnection::createPreviewFromArtistDoc ).into(new ArrayList<>());
+        return getArtists(genre, null, offset, limit);
+    }
+
+
+    @Override
+    public List<Preview> getArtists(String genre, String name, int offset, int limit) {
+        List<Bson> aggregationStages = new ArrayList<>();
+
+        if (name != null  && name.length() > 0){
+            Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
+            Bson nameMatchDoc = regex("name", namePattern);
+            if (genre != null && genre.length() > 0){  //Name not null and genre not null
+                Bson genreMatchDoc = eq("genres", genre);
+                aggregationStages.add( match( and( genreMatchDoc, nameMatchDoc) ));
+            } else { //Name not null and genre null
+                aggregationStages.add( match(nameMatchDoc) );
+            }
+        } else {
+            if (genre != null && genre.length() > 0) { //Name is null, genre is not null
+                Bson genreMatchDoc = eq("genres", genre);
+                aggregationStages.add( match(genreMatchDoc) );
+            }
+        }
+
+        aggregationStages.addAll(
+                Arrays.asList(
+                        project(include("images", "name")),
+                        skip(offset),
+                        limit(limit)
+                )
+        );
+
+        return collection.aggregate(aggregationStages)
+                .map( MongoConnection::createPreviewFromArtistDoc )
+                .into(new ArrayList<>());
     }
 
     @Override
     public Iterable<String> getSimilarArtistNames(String name, int offset, int limit) {
-        name = name.replace('+', ' '); // jQuery replaces spaces with +'s
+        name = name.replace('+', ' '); // jQuery POSTs replace spaces with +'s
         Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
         return  collection.aggregate(
                 Arrays.asList(
@@ -181,16 +210,7 @@ public class MongoConnection extends DatabaseConnection {
 
     @Override
     public List<Preview> getArtistsByName(String name, int offset, int limit) {
-        String searchPhrase = "\"" + name.trim() + "\"";
-        Document nameFilter = new Document("$text", new Document("$search", searchPhrase));
-        return  collection.aggregate(
-                Arrays.asList(
-                        match(nameFilter),
-                        project(include("images", "name")),
-                        skip(offset),
-                        limit(limit)
-                )).map( MongoConnection::createPreviewFromArtistDoc )
-                .into(new ArrayList<>());
+        return getArtists(null, name, offset, limit);
     }
 
     /**

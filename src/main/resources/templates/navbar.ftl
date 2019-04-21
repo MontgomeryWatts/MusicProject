@@ -22,9 +22,10 @@
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li>
-                    <form class="navbar-form" method="get" action="/search">
+                    <form class="navbar-form" method="GET" action="/search">
                         <div class="form-group" style="display: flex">
-                            <input type="text" class="form-control" placeholder="Artist Name" name="artist_name" id="artist_input">
+                            <input type="hidden" value="artist" name="type">
+                            <input type="text" class="form-control" placeholder="Artist Name" name="name" id="artist_input">
                             <button type="submit" class="btn btn-default" onclick="return notEmpty('artist_input')">
                                 <span class="glyphicon glyphicon-search"></span> Search
                             </button>

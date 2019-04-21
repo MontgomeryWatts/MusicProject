@@ -37,6 +37,10 @@ public class DatabaseService {
         return db.getArtistsByGenre(genre, offset, limit);
     }
 
+    public List<Preview> getArtists(String genre, String name, int offset, int limit){
+        return db.getArtists(genre, name, offset, limit);
+    }
+
     public List<Preview> getArtistsByName(String name, int offset, int limit){
         return db.getArtistsByName(name, offset, limit);
     }

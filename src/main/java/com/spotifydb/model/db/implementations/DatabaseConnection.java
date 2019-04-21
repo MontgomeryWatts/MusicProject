@@ -19,6 +19,8 @@ public abstract class DatabaseConnection {
     public abstract Set<String> getAllFeaturedArtists();
     public abstract Set<String> getAllArtistUris();
     public abstract Iterable<String> getSimilarArtistNames(String name, int offset, int limit);
+
+    public abstract List<Preview> getArtists(String genre, String name, int offset, int limit);
     public abstract List<Preview> getArtistsByGenre(String genre, int offset, int limit);
     public abstract List<Preview> getArtistsByName(String name, int offset, int limit);
     public abstract List<Preview> getArtistsByRandom();
