@@ -95,9 +95,9 @@ public class MongoConnection extends DatabaseConnection {
 
         aggregationStages.add(group(null, sum("total", 1)));
 
-        return collection.aggregate(aggregationStages)
-                .first()
-                .getInteger("total");
+
+        Document artistsDoc = collection.aggregate(aggregationStages).first();
+        return artistsDoc != null ? artistsDoc.getInteger("total") : 0;
     }
 
     /**
@@ -420,6 +420,7 @@ public class MongoConnection extends DatabaseConnection {
                         group(null, sum("duration", "$duration"))
                 )
         ).first();
+
 
         return songsDoc.getInteger("duration");
     }
