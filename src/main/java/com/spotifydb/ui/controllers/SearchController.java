@@ -75,7 +75,7 @@ public class SearchController {
 
     private static String getPaginationLink(int page){
         ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest();
-        //builder.scheme("https");
+        builder.scheme("https");
         builder.replaceQueryParam("page", page);
         return builder.build().toString();
     }
