@@ -21,7 +21,7 @@
                 <div class="row">
                     <#list row as genre>
                             <div class="col-xs-6 col-md-3">
-                                <a href="/search?type=artist&genre=${genre}&page=1">
+                                <a href="/search?type=artist&genre=${genre?replace('&', '%26')}&page=1">
                                     ${genre}
                                 </a>
                             </div>
