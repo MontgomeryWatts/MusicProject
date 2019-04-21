@@ -37,6 +37,10 @@ public class DatabaseService {
         return db.getArtistsByGenre(genre, offset, limit);
     }
 
+    public List<Preview> getArtists(String genre, String name, int offset, int limit){
+        return db.getArtists(genre, name, offset, limit);
+    }
+
     public List<Preview> getArtistsByName(String name, int offset, int limit){
         return db.getArtistsByName(name, offset, limit);
     }
@@ -44,8 +48,8 @@ public class DatabaseService {
         return db.getGenres();
     }
     public List<String> getGenresByLetter(char letter){ return db.getGenresByLetter(letter);}
-    public long getNumArtistsByGenre(String genre){
-        return db.getNumberOfArtistsByGenre(genre);
+    public long getNumArtistsBy(String genre, String name){
+        return db.getNumArtistsBy(genre, name);
     }
     public String getRandomArtistURI(){return db.getRandomArtistUri();}
 }
