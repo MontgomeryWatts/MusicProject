@@ -10,14 +10,7 @@
         <div class="container">
             <#if artist??>
                 <h1>${artist["name"]}</h1>
-                <img src=
-                    <#if artist["images"]?has_content>
-                        "${artist["images"][1]}"
-                    <#else>
-                        "/images/blank_profile_pic.png"
-                    </#if>
-                class="artist-preview">
-
+                <img src=<#if artist["images"]?has_content>${artist["images"][1]}<#else>"/images/blank_profile_pic.png"</#if> class="artist-preview">
                 <br>
                 <br>
                 <h2>Genres</h2>
@@ -38,9 +31,7 @@
                     <tr>
                         <td rowspan="2" style="width: 200px;">
                             <a class="btn" data-toggle="collapse" data-target="#collapsedAlbum${album?index}" style="padding: 6px 0px;">
-                                <#if album["image"]??>
-                                    <img src="${album["image"]}" class="album-image">
-                                </#if>
+                                <img src=<#if album["image"]??>${album["image"]}<#else>"/images/no_album_art.png"</#if> class="album-image">
                             </a>
                         </td>
                         <td>

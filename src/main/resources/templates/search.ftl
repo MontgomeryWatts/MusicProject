@@ -28,6 +28,11 @@
                     <input type="text" class="col-xs-6 col-md-6" placeholder="Genre" name="genre" id="genre">
                 </div>
 
+                <div class="form-group row">
+                    <label for="year" class="col-xs-offset-1 col-xs-4 col-md-offset-2 col-md-2">Album Year</label>
+                    <input type="text" class="col-xs-6 col-md-6" placeholder="Year" name="year" id="year">
+                </div>
+
                 <input class="col-xs-offset-5 col-xs-3 col-md-offset-6 col-md-2" type="submit" value="Search">
             </form>
 

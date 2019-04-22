@@ -60,8 +60,12 @@ public class MongoConnection extends DatabaseConnection {
         String id = doc.getString("_id");
 
         Document embeddedAlbumDoc = (Document) doc.get("albums");
-        String imageUrl = embeddedAlbumDoc.getString("image");
         String text = embeddedAlbumDoc.getString("title");
+
+        String imageUrl = embeddedAlbumDoc.getString("image");
+        if (imageUrl == null){
+            imageUrl = BLANK_ALBUM;
+        }
 
         return new Preview(id, imageUrl, text);
     }
@@ -177,15 +181,15 @@ public class MongoConnection extends DatabaseConnection {
             Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
             Bson nameMatchDoc = regex("albums.title", namePattern);
             if (year != null){  //Name not null and genre not null
-                Bson genreMatchDoc = eq("albums.year", year);
-                return match( and( genreMatchDoc, nameMatchDoc));
+                Bson yearMatchDoc = eq("albums.year", year);
+                return match( and( yearMatchDoc, nameMatchDoc));
             } else { //Name not null and genre null
                 return match(nameMatchDoc);
             }
         } else {
             if (year != null) { //Name is null, genre is not null
-                Bson genreMatchDoc = eq("albums.year", year);
-                return match(genreMatchDoc);
+                Bson yearMatchDoc = eq("albums.year", year);
+                return match(yearMatchDoc);
             }
         }
         return null;

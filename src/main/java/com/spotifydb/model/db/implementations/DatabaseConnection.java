@@ -10,6 +10,7 @@ import java.util.Set;
 
 public abstract class DatabaseConnection {
     protected static String BLANK_PROFILE = "/images/blank_profile_pic.png";
+    protected static String BLANK_ALBUM = "/images/no_album_art.png";
     public static int RESULTS_PER_PAGE = 20;
 
     //Artist specific methods
