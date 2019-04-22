@@ -38,6 +38,14 @@ public class DatabaseService {
         return db.getArtists(genre, name, offset, limit);
     }
 
+    public List<Preview> getAlbums(String name, Integer year, int offset, int limit){
+        return db.getAlbums(name, year, offset, limit);
+    }
+
+    public long getNumAlbumsBy(String name, Integer year){
+        return db.getNumAlbumsBy(name, year);
+    }
+
     public List<String> getAllGenres(){
         return db.getGenres();
     }

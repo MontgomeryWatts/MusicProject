@@ -56,6 +56,16 @@ public class MongoConnection extends DatabaseConnection {
         return new Preview(id, imageUrl, text);
     }
 
+    private static Preview createPreviewFromAlbumDoc(Document doc){
+        String id = doc.getString("_id");
+
+        Document embeddedAlbumDoc = (Document) doc.get("albums");
+        String imageUrl = embeddedAlbumDoc.getString("image");
+        String text = embeddedAlbumDoc.getString("title");
+
+        return new Preview(id, imageUrl, text);
+    }
+
 
     /**
      * The collection attribute has its documents designed around artists. That is,
@@ -68,29 +78,13 @@ public class MongoConnection extends DatabaseConnection {
     }
 
 
-    /**
-     *
-     * @param genre String representing the genre to search for
-     * @return The number of artists that have that genre in their genres array
-     */
     @Override
     public long getNumArtistsBy(String genre, String name){
         List<Bson> aggregationStages = new ArrayList<>();
 
-        if (name != null  && name.length() > 0){
-            Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
-            Bson nameMatchDoc = regex("name", namePattern);
-            if (genre != null && genre.length() > 0){  //Name not null and genre not null
-                Bson genreMatchDoc = eq("genres", genre);
-                aggregationStages.add( match( and( genreMatchDoc, nameMatchDoc) ));
-            } else { //Name not null and genre null
-                aggregationStages.add( match(nameMatchDoc) );
-            }
-        } else {
-            if (genre != null && genre.length() > 0) { //Name is null, genre is not null
-                Bson genreMatchDoc = eq("genres", genre);
-                aggregationStages.add( match(genreMatchDoc) );
-            }
+        Bson artistMatcher = createArtistMatchDoc(genre, name);
+        if (artistMatcher != null) {
+            aggregationStages.add(artistMatcher);
         }
 
         aggregationStages.add(group(null, sum("total", 1)));
@@ -159,25 +153,94 @@ public class MongoConnection extends DatabaseConnection {
         return collection.find( eq("_id", artistUri)).first();
     }
 
-
-    @Override
-    public List<Preview> getArtists(String genre, String name, int offset, int limit) {
-        List<Bson> aggregationStages = new ArrayList<>();
-
+    private Bson createArtistMatchDoc(String genre, String name){
         if (name != null  && name.length() > 0){
             Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
             Bson nameMatchDoc = regex("name", namePattern);
             if (genre != null && genre.length() > 0){  //Name not null and genre not null
                 Bson genreMatchDoc = eq("genres", genre);
-                aggregationStages.add( match( and( genreMatchDoc, nameMatchDoc) ));
+                return match( and( genreMatchDoc, nameMatchDoc));
             } else { //Name not null and genre null
-                aggregationStages.add( match(nameMatchDoc) );
+                return match(nameMatchDoc);
             }
         } else {
             if (genre != null && genre.length() > 0) { //Name is null, genre is not null
                 Bson genreMatchDoc = eq("genres", genre);
-                aggregationStages.add( match(genreMatchDoc) );
+                return match(genreMatchDoc);
             }
+        }
+        return null;
+    }
+
+    private Bson createAlbumMatchDoc(String name, Integer year){
+        if (name != null  && name.length() > 0){
+            Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
+            Bson nameMatchDoc = regex("albums.title", namePattern);
+            if (year != null){  //Name not null and genre not null
+                Bson genreMatchDoc = eq("albums.year", year);
+                return match( and( genreMatchDoc, nameMatchDoc));
+            } else { //Name not null and genre null
+                return match(nameMatchDoc);
+            }
+        } else {
+            if (year != null) { //Name is null, genre is not null
+                Bson genreMatchDoc = eq("albums.year", year);
+                return match(genreMatchDoc);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public long getNumAlbumsBy(String name, Integer year){
+        List<Bson> aggregationStages = new ArrayList<>();
+
+        aggregationStages.add( unwind("$albums") );
+
+        Bson albumMatcher = createAlbumMatchDoc(name, year);
+        if (albumMatcher != null) {
+            aggregationStages.add(albumMatcher);
+        }
+
+        aggregationStages.add(group(null, sum("total", 1)));
+
+
+        Document albumsDoc = collection.aggregate(aggregationStages).first();
+        return albumsDoc != null ? albumsDoc.getInteger("total") : 0;
+    }
+
+
+    @Override
+    public List<Preview> getAlbums(String name, Integer year, int offset, int limit){
+        List<Bson> aggregationStages = new ArrayList<>();
+
+        aggregationStages.add( unwind("$albums") );
+
+        Bson albumMatcher = createAlbumMatchDoc(name, year);
+        if (albumMatcher != null) {
+            aggregationStages.add(albumMatcher);
+        }
+
+        aggregationStages.addAll(
+                Arrays.asList(
+                        project( include("albums.image", "albums.title")),
+                        skip(offset),
+                        limit(limit)
+                )
+        );
+
+        return collection.aggregate(aggregationStages)
+                .map( MongoConnection::createPreviewFromAlbumDoc )
+                .into(new ArrayList<>());
+    }
+
+    @Override
+    public List<Preview> getArtists(String genre, String name, int offset, int limit) {
+        List<Bson> aggregationStages = new ArrayList<>();
+
+        Bson artistMatcher = createArtistMatchDoc(genre, name);
+        if (artistMatcher != null) {
+            aggregationStages.add(artistMatcher);
         }
 
         aggregationStages.addAll(

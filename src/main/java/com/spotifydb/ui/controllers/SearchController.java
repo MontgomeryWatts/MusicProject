@@ -26,6 +26,7 @@ public class SearchController {
     public String searchGet(Model model, @RequestParam(required = false) String type,
                             @RequestParam(required = false) String name,
                             @RequestParam(required = false) String genre,
+                            @RequestParam(required = false) Integer year,
                             @RequestParam(required = false, defaultValue = "1") Integer page){
 
         model.addAttribute("title", "Search - SpotifyDB");
@@ -33,12 +34,17 @@ public class SearchController {
         if (type != null){
             List<Preview> previews = null;
             boolean hasNext = false;
+            int offset;
             switch (type){
                 case "artist":
-                    int offset = RESULTS_PER_PAGE * (page - 1);
+                    offset = RESULTS_PER_PAGE * (page - 1);
                     previews = service.getArtists(genre, name, offset, RESULTS_PER_PAGE);
                     hasNext = service.getNumArtistsBy(genre, name) > previews.size() + RESULTS_PER_PAGE * (page -1);
                     break;
+                case "album":
+                    offset = RESULTS_PER_PAGE * (page - 1);
+                    previews = service.getAlbums(name, year, offset, RESULTS_PER_PAGE);
+                    hasNext = service.getNumAlbumsBy(name, year) > previews.size() + RESULTS_PER_PAGE * (page -1);
                 default:
                     break;
             }
@@ -71,7 +77,7 @@ public class SearchController {
 
     private static String getPaginationLink(int page){
         ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest();
-        builder.scheme("https");
+        //builder.scheme("https");
         builder.replaceQueryParam("page", page);
         return builder.build().toString();
     }

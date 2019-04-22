@@ -25,6 +25,9 @@ public abstract class DatabaseConnection {
     public abstract List<Preview> getArtistsByRandom();
     public abstract boolean insertArtist(Artist artist, Album[] albums);
 
+    public abstract long getNumAlbumsBy(String name, Integer year);
+    public abstract List<Preview> getAlbums(String name, Integer year, int offset, int limit);
+
     //Genre specific methods
     public abstract List<String> getGenres();
     public abstract List<String> getGenresByLetter(char c);
