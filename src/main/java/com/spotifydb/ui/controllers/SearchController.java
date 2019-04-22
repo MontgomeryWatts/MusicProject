@@ -1,20 +1,15 @@
 package com.spotifydb.ui.controllers;
 
 import com.spotifydb.model.Preview;
-import com.spotifydb.model.db.implementations.DatabaseConnection;
-import com.spotifydb.model.db.queries.DatabaseQueries;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.spotifydb.application.DatabaseService;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.spotifydb.model.db.implementations.DatabaseConnection.RESULTS_PER_PAGE;
@@ -49,7 +44,7 @@ public class SearchController {
             }
 
             if (previews != null){
-                model.addAttribute("artists", previews);
+                model.addAttribute("results", previews);
                 model.addAttribute("page", page);
 
 
@@ -67,7 +62,7 @@ public class SearchController {
                 }
 
 
-                return "artists";
+                return "results";
             }
         }
 

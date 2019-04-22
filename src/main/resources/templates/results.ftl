@@ -8,22 +8,22 @@
     <body>
         <#include "navbar.ftl">
         <div class="container">
-             <#if artists?has_content>
-                    <#list artists?chunk(2) as row>
+             <#if results?has_content>
+                    <#list results?chunk(2) as row>
                         <div class="row">
-                            <#list row as artist>
-                                <#if artist??>
-                                    <#if artist=row?first>
+                            <#list row as result>
+                                <#if result??>
+                                    <#if result=row?first>
                                     <div class="col-xs-10 col-xs-offset-1 col-md-offset-1 col-md-4 no-text-overflow">
                                     <#else>
                                     <div class="col-xs-10 col-xs-offset-1 col-md-offset-2 col-md-4 no-text-overflow">
                                     </#if>
-                                        <a href="/artists/${artist.id}">
-                                            <img src="${artist.imageUrl}" class="artist-preview">
+                                        <a href="/artists/${result.id}">
+                                            <img src="${result.imageUrl}" class="artist-preview">
                                         </a>
                                         <span>&nbsp;</span>
-                                        <a href="spotify:artist:${artist.id}">
-                                            ${artist.text}
+                                        <a href="spotify:artist:${result.id}">
+                                            ${result.text}
                                         </a>
                                 </div>
                                 </#if>

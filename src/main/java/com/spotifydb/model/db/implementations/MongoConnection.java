@@ -159,19 +159,6 @@ public class MongoConnection extends DatabaseConnection {
         return collection.find( eq("_id", artistUri)).first();
     }
 
-    /**
-     * Gets a list of artist Documents by genre. Offset and limit are passed for use in pagination.
-     * @param genre The genre to match on
-     * @param offset How many artist Documents to skip
-     * @param limit How many artist Documents to return up to
-     * @return A list of artist Documents that have the given genre
-     */
-
-    @Override
-    public List<Preview> getArtistsByGenre(String genre, int offset, int limit) {
-        return getArtists(genre, null, offset, limit);
-    }
-
 
     @Override
     public List<Preview> getArtists(String genre, String name, int offset, int limit) {
@@ -217,21 +204,6 @@ public class MongoConnection extends DatabaseConnection {
                         skip(offset),
                         limit(limit)
                 )).map((Document document) -> document.getString("name"));
-    }
-
-    /**
-     * Retrieves a List of artist documents from the artists collection, performing a case-insensitive text search
-     * It is necessary to have a text index on the _id field for this method to not throw an exception.
-     * This can be performed in the MongoDB shell by entering db.artists.createIndex({'name':"text"}, {default_language:"none"})
-     * @param name The name of the artist we are searching for
-     * @param offset How many artists to skip
-     * @param limit How many artists to show up to
-     * @return A List of Documents whose artist name match the passed name
-     */
-
-    @Override
-    public List<Preview> getArtistsByName(String name, int offset, int limit) {
-        return getArtists(null, name, offset, limit);
     }
 
     /**

@@ -21,9 +21,9 @@ public class ArtistController {
     @GetMapping("")
     public String artists(Model model){
         List<Preview> artists = service.getArtistsByRandom();
-        model.addAttribute("artists", artists);
+        model.addAttribute("results", artists);
         model.addAttribute("title", "Displays random artists");
-        return "artists";
+        return "results";
     }
 
     @GetMapping("/{uri}")

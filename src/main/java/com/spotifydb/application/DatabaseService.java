@@ -33,17 +33,11 @@ public class DatabaseService {
     public List<Preview> getArtistsByRandom(){
         return db.getArtistsByRandom();
     }
-    public List<Preview> getArtistsByGenre(String genre, int offset, int limit){
-        return db.getArtistsByGenre(genre, offset, limit);
-    }
 
     public List<Preview> getArtists(String genre, String name, int offset, int limit){
         return db.getArtists(genre, name, offset, limit);
     }
 
-    public List<Preview> getArtistsByName(String name, int offset, int limit){
-        return db.getArtistsByName(name, offset, limit);
-    }
     public List<String> getAllGenres(){
         return db.getGenres();
     }
