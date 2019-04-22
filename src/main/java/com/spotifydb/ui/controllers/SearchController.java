@@ -33,6 +33,8 @@ public class SearchController {
                             @RequestParam(required = false) String genre,
                             @RequestParam(required = false, defaultValue = "1") Integer page){
 
+        model.addAttribute("title", "Search - SpotifyDB");
+
         if (type != null){
             List<Preview> previews = null;
             boolean hasNext = false;
@@ -48,7 +50,7 @@ public class SearchController {
 
             if (previews != null){
                 model.addAttribute("artists", previews);
-                model.addAttribute("title", "Search");
+                model.addAttribute("page", page);
 
 
                 boolean hasPrev = page >= 2 && previews.size() > 0;
@@ -69,7 +71,6 @@ public class SearchController {
             }
         }
 
-        model.addAttribute("title", "Search");
         return "search";
     }
 

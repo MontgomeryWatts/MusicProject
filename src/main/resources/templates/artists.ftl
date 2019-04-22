@@ -12,8 +12,12 @@
                     <#list artists?chunk(2) as row>
                         <div class="row">
                             <#list row as artist>
-                                <div class="col-xs-10 col-xs-offset-2 col-md-offset-0 col-md-6 no-text-overflow">
-                                    <div class="container-fluid">
+                                <#if artist??>
+                                    <#if artist=row?first>
+                                    <div class="col-xs-10 col-xs-offset-1 col-md-offset-1 col-md-4 no-text-overflow">
+                                    <#else>
+                                    <div class="col-xs-10 col-xs-offset-1 col-md-offset-2 col-md-4 no-text-overflow">
+                                    </#if>
                                         <a href="/artists/${artist.id}">
                                             <img src="${artist.imageUrl}" class="artist-preview">
                                         </a>
@@ -21,23 +25,32 @@
                                         <a href="spotify:artist:${artist.id}">
                                             ${artist.text}
                                         </a>
-                                    </div>
                                 </div>
+                                </#if>
                             </#list>
                         </div>
 
                     </#list>
                  <nav>
 
-                     <ul class="pager">
+                     <div class="text-center">
+                         <ul class="pagination">
                          <#if hasPrev??>
-                            <li class="previous"><a style="color:black" href="${prevLink}"><span>←  </span>Previous</a></li>
+                            <li><a style="color:black" href="${prevLink}"><span>&laquo;</span></a></li>
+                            <li><a style="color:black" href="${prevLink}">${page - 1}</a></li>
+                         </#if>
+
+                         <#if hasPrev?? || hasNext??>
+                            <li class="active"><a style="color:black">${page}</a></li>
                          </#if>
 
                          <#if hasNext??>
-                            <li class="next"><a style="color:black" href="${nextLink}">Next<span>  →</span></a></li>
+                            <li><a style="color:black" href="${nextLink}">${page + 1}</a></li>
+                            <li><a style="color:black" href="${nextLink}"><span>&raquo;</span></a></li>
                          </#if>
-                     </ul>
+                         </ul>
+                     </div>
+
                  </nav>
              <#else>
             <h1>
