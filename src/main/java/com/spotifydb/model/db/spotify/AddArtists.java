@@ -1,7 +1,7 @@
 package com.spotifydb.model.db.spotify;
 
 import com.spotifydb.model.db.implementations.DatabaseConnection;
-import com.spotifydb.model.db.implementations.MongoConnection;
+import com.spotifydb.model.db.implementations.mongo.MongoConnection;
 import com.wrapper.spotify.model_objects.specification.Album;
 import com.wrapper.spotify.model_objects.specification.Artist;
 import com.wrapper.spotify.model_objects.specification.Paging;

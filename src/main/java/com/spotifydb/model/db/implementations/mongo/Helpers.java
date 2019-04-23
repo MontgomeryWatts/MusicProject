@@ -1,4 +1,4 @@
-package com.spotifydb.model.db;
+package com.spotifydb.model.db.implementations.mongo;
 
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;

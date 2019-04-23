@@ -1,4 +1,4 @@
-package com.spotifydb.model.db.implementations;
+package com.spotifydb.model.db.implementations.mongo;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -7,6 +7,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import com.spotifydb.model.Preview;
+import com.spotifydb.model.db.implementations.DatabaseConnection;
 import com.spotifydb.model.db.spotify.AddReferencedArtists;
 import com.wrapper.spotify.model_objects.specification.*;
 import org.bson.Document;

@@ -3,7 +3,7 @@ package com.spotifydb.application;
 
 import com.spotifydb.model.Preview;
 import com.spotifydb.model.db.implementations.DatabaseConnection;
-import com.spotifydb.model.db.implementations.MongoConnection;
+import com.spotifydb.model.db.implementations.mongo.MongoConnection;
 import org.bson.Document;
 import org.springframework.stereotype.Service;
 
