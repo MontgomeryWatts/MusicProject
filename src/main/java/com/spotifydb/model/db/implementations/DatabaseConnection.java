@@ -10,19 +10,24 @@ import java.util.Set;
 
 public abstract class DatabaseConnection {
     protected static String BLANK_PROFILE = "/images/blank_profile_pic.png";
+    protected static String BLANK_ALBUM = "/images/no_album_art.png";
+    public static int RESULTS_PER_PAGE = 20;
 
     //Artist specific methods
     public abstract Document getArtistByUri(String artistUri);
     public abstract String getRandomArtistUri();
-    public abstract long getNumberOfArtists();
-    public abstract long getNumberOfArtistsByGenre(String genre);
+    public abstract long getNumArtists();
+    public abstract long getNumArtistsBy(String genre, String name);
     public abstract Set<String> getAllFeaturedArtists();
     public abstract Set<String> getAllArtistUris();
     public abstract Iterable<String> getSimilarArtistNames(String name, int offset, int limit);
-    public abstract List<Preview> getArtistsByGenre(String genre, int offset, int limit);
-    public abstract List<Preview> getArtistsByName(String name, int offset, int limit);
+
+    public abstract List<Preview> getArtists(String genre, String name, int offset, int limit);
     public abstract List<Preview> getArtistsByRandom();
     public abstract boolean insertArtist(Artist artist, Album[] albums);
+
+    public abstract long getNumAlbumsBy(String name, Integer year);
+    public abstract List<Preview> getAlbums(String name, Integer year, int offset, int limit);
 
     //Genre specific methods
     public abstract List<String> getGenres();

@@ -3,7 +3,7 @@ package com.spotifydb.application;
 
 import com.spotifydb.model.Preview;
 import com.spotifydb.model.db.implementations.DatabaseConnection;
-import com.spotifydb.model.db.implementations.MongoConnection;
+import com.spotifydb.model.db.implementations.mongo.MongoConnection;
 import org.bson.Document;
 import org.springframework.stereotype.Service;
 
@@ -33,22 +33,25 @@ public class DatabaseService {
     public List<Preview> getArtistsByRandom(){
         return db.getArtistsByRandom();
     }
-    public List<Preview> getArtistsByGenre(String genre, int offset, int limit){
-        return db.getArtistsByGenre(genre, offset, limit);
+
+    public List<Preview> getArtists(String genre, String name, int offset, int limit){
+        return db.getArtists(genre, name, offset, limit);
     }
 
-    public List<Preview> getArtistsByName(String name, int offset, int limit){
-        return db.getArtistsByName(name, offset, limit);
+    public List<Preview> getAlbums(String name, Integer year, int offset, int limit){
+        return db.getAlbums(name, year, offset, limit);
     }
+
+    public long getNumAlbumsBy(String name, Integer year){
+        return db.getNumAlbumsBy(name, year);
+    }
+
     public List<String> getAllGenres(){
         return db.getGenres();
     }
     public List<String> getGenresByLetter(char letter){ return db.getGenresByLetter(letter);}
-    public Iterable<String> getSimilarGenres(String genre, int offset, int limit){
-        return db.getSimilarGenres(genre, offset, limit);
-    }
-    public long getNumArtistsByGenre(String genre){
-        return db.getNumberOfArtistsByGenre(genre);
+    public long getNumArtistsBy(String genre, String name){
+        return db.getNumArtistsBy(genre, name);
     }
     public String getRandomArtistURI(){return db.getRandomArtistUri();}
 }

@@ -1,7 +1,7 @@
 package com.spotifydb.model.db.spotify;
 
 import com.spotifydb.model.db.implementations.DatabaseConnection;
-import com.spotifydb.model.db.implementations.MongoConnection;
+import com.spotifydb.model.db.implementations.mongo.MongoConnection;
 import com.wrapper.spotify.model_objects.specification.Album;
 import com.wrapper.spotify.model_objects.specification.Artist;
 import com.wrapper.spotify.model_objects.specification.Paging;
@@ -16,7 +16,7 @@ public class AddArtists {
     public static void main(String[] args) {
         DatabaseConnection db = new MongoConnection();
         SpotifyConnection sc = new SpotifyConnection();
-        System.out.println(db.getNumberOfArtists());
+        System.out.println(db.getNumArtists());
 
         for(String name: getArtistNames("src/main/resources/artistNames.txt")){
             Paging<Artist> artists = sc.getArtistsByName(name);
@@ -27,7 +27,7 @@ public class AddArtists {
 
         }
 
-        System.out.println(db.getNumberOfArtists());
+        System.out.println(db.getNumArtists());
     }
     /**
      * Reads in from a file a list of artists to add to the database
