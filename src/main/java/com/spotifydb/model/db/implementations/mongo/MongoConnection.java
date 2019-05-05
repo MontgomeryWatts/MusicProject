@@ -51,24 +51,25 @@ public class MongoConnection extends DatabaseConnection {
     private static Preview createPreviewFromArtistDoc(Document doc){
         List<String> imageUrls = (ArrayList<String>) doc.get("images");
         String imageUrl = (imageUrls.size() != 0) ? imageUrls.get(0) : BLANK_PROFILE;
-        String id = doc.getString("_id");
+        String artistId = doc.getString("_id");
         String text = doc.getString("name");
 
-        return new Preview(id, imageUrl, text);
+        return new Preview(Preview.Type.ARTIST, artistId, artistId, imageUrl, text);
     }
 
     private static Preview createPreviewFromAlbumDoc(Document doc){
-        String id = doc.getString("_id");
+        String artistId = doc.getString("_id");
 
         Document embeddedAlbumDoc = (Document) doc.get("albums");
-        String text = embeddedAlbumDoc.getString("title");
 
+        String albumUri = embeddedAlbumDoc.getString("uri");
+        String text = embeddedAlbumDoc.getString("title");
         String imageUrl = embeddedAlbumDoc.getString("image");
         if (imageUrl == null){
             imageUrl = BLANK_ALBUM;
         }
 
-        return new Preview(id, imageUrl, text);
+        return new Preview(Preview.Type.ALBUM, artistId, albumUri, imageUrl, text);
     }
 
 
@@ -228,7 +229,7 @@ public class MongoConnection extends DatabaseConnection {
 
         aggregationStages.addAll(
                 Arrays.asList(
-                        project( include("albums.image", "albums.title")),
+                        project( include("albums.uri", "albums.image", "albums.title")),
                         skip(offset),
                         limit(limit)
                 )
