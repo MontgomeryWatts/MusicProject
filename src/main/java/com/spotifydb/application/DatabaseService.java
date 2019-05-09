@@ -2,6 +2,7 @@ package com.spotifydb.application;
 
 
 import com.spotifydb.model.Preview;
+import com.spotifydb.model.PreviewPage;
 import com.spotifydb.model.db.implementations.DatabaseConnection;
 import com.spotifydb.model.db.implementations.mongo.MongoConnection;
 import org.bson.Document;
@@ -30,28 +31,21 @@ public class DatabaseService {
         return db.getArtistByUri(uri);
     }
     public Iterable<String> getSimilarArtistNames(String name, int offset, int limit) { return db.getSimilarArtistNames(name, offset, limit);}
-    public List<Preview> getArtistsByRandom(){
+    public PreviewPage getArtistsByRandom(){
         return db.getArtistsByRandom();
     }
 
-    public List<Preview> getArtists(String genre, String name, int offset, int limit){
+    public PreviewPage getArtists(String genre, String name, int offset, int limit){
         return db.getArtists(genre, name, offset, limit);
     }
 
-    public List<Preview> getAlbums(String name, Integer year, int offset, int limit){
+    public PreviewPage getAlbums(String name, Integer year, int offset, int limit){
         return db.getAlbums(name, year, offset, limit);
-    }
-
-    public long getNumAlbumsBy(String name, Integer year){
-        return db.getNumAlbumsBy(name, year);
     }
 
     public List<String> getAllGenres(){
         return db.getGenres();
     }
     public List<String> getGenresByLetter(char letter){ return db.getGenresByLetter(letter);}
-    public long getNumArtistsBy(String genre, String name){
-        return db.getNumArtistsBy(genre, name);
-    }
     public String getRandomArtistURI(){return db.getRandomArtistUri();}
 }
