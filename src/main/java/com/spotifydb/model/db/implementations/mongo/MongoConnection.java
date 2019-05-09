@@ -209,9 +209,13 @@ public class MongoConnection extends DatabaseConnection {
 
         Document result = collection.aggregate(aggregationStages).first();
 
+        int totalResults = 0;
         List<Document> totalFacet = (ArrayList<Document>) result.get("total");
-        Document countDoc = totalFacet.get(0);
-        int totalResults = countDoc.getInteger("count");
+
+        if (totalFacet.size()> 0 ){
+            Document countDoc = totalFacet.get(0);
+            totalResults = countDoc.getInteger("count");
+        }
 
         List<Document> matchedDocs = (ArrayList<Document>) result.get("paging");
         List<Preview> previews = matchedDocs.stream()
@@ -249,10 +253,13 @@ public class MongoConnection extends DatabaseConnection {
 
         Document result = collection.aggregate(aggregationStages).first();
 
+        int totalResults = 0;
         List<Document> totalFacet = (ArrayList<Document>) result.get("total");
-        Document countDoc = totalFacet.get(0);
-        int totalResults = countDoc.getInteger("count");
 
+        if (totalFacet.size()> 0 ){
+            Document countDoc = totalFacet.get(0);
+            totalResults = countDoc.getInteger("count");
+        }
 
         List<Document> matchedDocs = (ArrayList<Document>) result.get("paging");
         List<Preview> previews = matchedDocs.stream()
