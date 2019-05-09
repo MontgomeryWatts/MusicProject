@@ -31,7 +31,7 @@ public class DatabaseService {
         return db.getArtistByUri(uri);
     }
     public Iterable<String> getSimilarArtistNames(String name, int offset, int limit) { return db.getSimilarArtistNames(name, offset, limit);}
-    public List<Preview> getArtistsByRandom(){
+    public PreviewPage getArtistsByRandom(){
         return db.getArtistsByRandom();
     }
 

@@ -1,6 +1,7 @@
 package com.spotifydb.ui.controllers;
 
 import com.spotifydb.model.Preview;
+import com.spotifydb.model.PreviewPage;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,8 +21,8 @@ public class ArtistController {
 
     @GetMapping("")
     public String artists(Model model){
-        List<Preview> artists = service.getArtistsByRandom();
-        model.addAttribute("results", artists);
+        PreviewPage page = service.getArtistsByRandom();
+        model.addAttribute("results", page.getPreviews());
         model.addAttribute("title", "Displays random artists");
         return "results";
     }

@@ -126,11 +126,15 @@ public class MongoConnection extends DatabaseConnection {
      * @return A List of random artist Previews
      */
     @Override
-    public List<Preview> getArtistsByRandom(){
-        return collection.aggregate(Arrays.asList(
+    public PreviewPage getArtistsByRandom(){
+        PreviewPage page = new PreviewPage();
+        List<Preview> previews = collection.aggregate(Arrays.asList(
                 sample(RESULTS_PER_PAGE),
                 project(include("images", "name"))
         )).map( MongoConnection::createPreviewFromArtistDoc ).into(new ArrayList<>());
+
+        page.setPreviews(previews);
+        return page;
     }
 
     /**
