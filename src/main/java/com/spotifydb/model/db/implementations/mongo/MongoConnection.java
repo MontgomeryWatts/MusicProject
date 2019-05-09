@@ -7,6 +7,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import com.spotifydb.model.Preview;
+import com.spotifydb.model.PreviewPage;
 import com.spotifydb.model.db.implementations.DatabaseConnection;
 import com.spotifydb.model.db.spotify.AddReferencedArtists;
 import com.wrapper.spotify.model_objects.specification.*;
@@ -16,6 +17,7 @@ import com.spotifydb.ui.controllers.ArtistController;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Accumulators.*;
 import static com.mongodb.client.model.Aggregates.*;
@@ -81,23 +83,6 @@ public class MongoConnection extends DatabaseConnection {
     @Override
     public long getNumArtists(){
         return collection.count();
-    }
-
-
-    @Override
-    public long getNumArtistsBy(String genre, String name){
-        List<Bson> aggregationStages = new ArrayList<>();
-
-        Bson artistMatcher = createArtistMatchDoc(genre, name);
-        if (artistMatcher != null) {
-            aggregationStages.add(artistMatcher);
-        }
-
-        aggregationStages.add(group(null, sum("total", 1)));
-
-
-        Document artistsDoc = collection.aggregate(aggregationStages).first();
-        return artistsDoc != null ? artistsDoc.getInteger("total") : 0;
     }
 
     /**
@@ -198,26 +183,7 @@ public class MongoConnection extends DatabaseConnection {
     }
 
     @Override
-    public long getNumAlbumsBy(String name, Integer year){
-        List<Bson> aggregationStages = new ArrayList<>();
-
-        aggregationStages.add( unwind("$albums") );
-
-        Bson albumMatcher = createAlbumMatchDoc(name, year);
-        if (albumMatcher != null) {
-            aggregationStages.add(albumMatcher);
-        }
-
-        aggregationStages.add(group(null, sum("total", 1)));
-
-
-        Document albumsDoc = collection.aggregate(aggregationStages).first();
-        return albumsDoc != null ? albumsDoc.getInteger("total") : 0;
-    }
-
-
-    @Override
-    public List<Preview> getAlbums(String name, Integer year, int offset, int limit){
+    public PreviewPage getAlbums(String name, Integer year, int offset, int limit){
         List<Bson> aggregationStages = new ArrayList<>();
 
         aggregationStages.add( unwind("$albums") );
@@ -230,18 +196,36 @@ public class MongoConnection extends DatabaseConnection {
         aggregationStages.addAll(
                 Arrays.asList(
                         project( include("albums.uri", "albums.image", "albums.title")),
-                        skip(offset),
-                        limit(limit)
+                        facet(new Facet("total", count()),
+                                new Facet("paging", skip(offset), limit(limit)))
                 )
         );
 
-        return collection.aggregate(aggregationStages)
-                .map( MongoConnection::createPreviewFromAlbumDoc )
-                .into(new ArrayList<>());
+        PreviewPage page = new PreviewPage();
+
+        Document result = collection.aggregate(aggregationStages).first();
+
+        List<Document> totalFacet = (ArrayList<Document>) result.get("total");
+        Document countDoc = totalFacet.get(0);
+        int totalResults = countDoc.getInteger("count");
+
+        List<Document> matchedDocs = (ArrayList<Document>) result.get("paging");
+        List<Preview> previews = matchedDocs.stream()
+                .map(MongoConnection::createPreviewFromAlbumDoc)
+                .collect(Collectors.toList());
+
+        page.setPreviews(previews);
+
+        if (totalResults > matchedDocs.size() + offset){
+            page.setNext(true);
+        }
+
+
+        return page;
     }
 
     @Override
-    public List<Preview> getArtists(String genre, String name, int offset, int limit) {
+    public PreviewPage getArtists(String genre, String name, int offset, int limit) {
         List<Bson> aggregationStages = new ArrayList<>();
 
         Bson artistMatcher = createArtistMatchDoc(genre, name);
@@ -252,14 +236,33 @@ public class MongoConnection extends DatabaseConnection {
         aggregationStages.addAll(
                 Arrays.asList(
                         project( include("images", "name")),
-                        skip(offset),
-                        limit(limit)
+                        facet(new Facet("total", count()),
+                            new Facet("paging", skip(offset), limit(limit)))
                 )
         );
 
-        return collection.aggregate(aggregationStages)
-                .map( MongoConnection::createPreviewFromArtistDoc )
-                .into(new ArrayList<>());
+        PreviewPage page = new PreviewPage();
+
+        Document result = collection.aggregate(aggregationStages).first();
+
+        List<Document> totalFacet = (ArrayList<Document>) result.get("total");
+        Document countDoc = totalFacet.get(0);
+        int totalResults = countDoc.getInteger("count");
+
+
+        List<Document> matchedDocs = (ArrayList<Document>) result.get("paging");
+        List<Preview> previews = matchedDocs.stream()
+                .map(MongoConnection::createPreviewFromArtistDoc)
+                .collect(Collectors.toList());
+
+        page.setPreviews(previews);
+
+        if (totalResults > matchedDocs.size() + offset){
+            page.setNext(true);
+        }
+
+
+        return page;
     }
 
     @Override

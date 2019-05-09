@@ -1,6 +1,7 @@
 package com.spotifydb.model.db.implementations;
 
 import com.spotifydb.model.Preview;
+import com.spotifydb.model.PreviewPage;
 import com.wrapper.spotify.model_objects.specification.Album;
 import com.wrapper.spotify.model_objects.specification.Artist;
 import org.bson.Document;
@@ -17,17 +18,15 @@ public abstract class DatabaseConnection {
     public abstract Document getArtistByUri(String artistUri);
     public abstract String getRandomArtistUri();
     public abstract long getNumArtists();
-    public abstract long getNumArtistsBy(String genre, String name);
     public abstract Set<String> getAllFeaturedArtists();
     public abstract Set<String> getAllArtistUris();
     public abstract Iterable<String> getSimilarArtistNames(String name, int offset, int limit);
 
-    public abstract List<Preview> getArtists(String genre, String name, int offset, int limit);
+    public abstract PreviewPage getArtists(String genre, String name, int offset, int limit);
     public abstract List<Preview> getArtistsByRandom();
     public abstract boolean insertArtist(Artist artist, Album[] albums);
 
-    public abstract long getNumAlbumsBy(String name, Integer year);
-    public abstract List<Preview> getAlbums(String name, Integer year, int offset, int limit);
+    public abstract PreviewPage getAlbums(String name, Integer year, int offset, int limit);
 
     //Genre specific methods
     public abstract List<String> getGenres();
