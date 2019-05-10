@@ -15,13 +15,9 @@
                 <br>
                 <h2>Genres</h2>
                 <#if artist["genres"]??>
-                    <table>
-                        <tr>
-                        <#list artist["genres"] as genre>
-                            <a href="/search?type=artist&genre=${genre?replace('&', '%26')?replace('+', '%2B')}&page=1" class="tag">${genre}</a>
-                        </#list>
-                        </tr>
-                    </table>
+                    <#list artist["genres"] as genre>
+                        <a href="/search?type=artist&genre=${genre?replace('&', '%26')?replace('+', '%2B')}&page=1" class="tag">${genre}</a>
+                    </#list>
                 </#if>
 
 
