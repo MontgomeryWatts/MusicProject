@@ -25,7 +25,7 @@
                 <table>
                 <#list artist["albums"] as album>
                     <tr>
-                        <td rowspan="2" style="width: 200px;">
+                        <td rowspan="2">
                             <a class="btn" data-toggle="collapse" data-target="#collapsedAlbum${album?index}" style="padding: 6px 0px;">
                                 <img src=<#if album["image"]??>${album["image"]}<#else>"/images/no_album_art.png"</#if> class="album-image">
                             </a>
@@ -51,7 +51,10 @@
                             <ol class="list-group">
                                 <#list album["songs"] as song>
                                     <a class="list-group-item" href="${song["uri"]}">
-                                        ${song["title"]} - ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
+                                        ${song?index + 1} &emsp; ${song["title"]}
+                                        <small style="float: right;">
+                                            ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
+                                        </small>
                                     </a>
                                 </#list>
 
