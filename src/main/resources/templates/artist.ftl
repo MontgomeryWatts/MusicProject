@@ -9,62 +9,70 @@
         <#include "navbar.ftl">
         <div class="container">
             <#if artist??>
-                <h1>${artist["name"]}</h1>
-                <img src=<#if artist["images"]?has_content>${artist["images"][1]}<#else>"/images/blank_profile_pic.png"</#if> class="artist-preview">
-                <br>
-                <br>
-                <h2>Genres</h2>
+                <div class="row text-center">
+                    <a href="spotify:artist:${artist["_id"]}">
+                        <h1>${artist["name"]}</h1>
+                        <img src=<#if artist["images"]?has_content>${artist["images"][1]}<#else>"/images/blank_profile_pic.png"</#if> class="artist-preview">
+                    </a>
+                </div>
+
+
                 <#if artist["genres"]??>
-                    <table>
-                        <tr>
+                    <br>
+                    <div class="row text-center">
+                        <h2>Genres</h2>
                         <#list artist["genres"] as genre>
                             <a href="/search?type=artist&genre=${genre?replace('&', '%26')?replace('+', '%2B')}&page=1" class="tag">${genre}</a>
                         </#list>
-                        </tr>
-                    </table>
+                    </div>
                 </#if>
 
+                <#if artist["albums"]??>
+                    <br>
+                    <div class="row text-center">
+                        <h2>Albums</h2>
+                        <#list artist["albums"] as album>
+                           <div class="media col-md-3">
+                               <div>
+                                   <a class="btn media-object" data-toggle="collapse" data-target="#collapsedAlbum${album?index}">
+                                       <img src=<#if album["image"]??>${album["image"]}<#else>"/images/no_album_art.png"</#if> class="album-image">
+                                   </a>
+                               </div>
 
-                <h2>Albums</h2>
-                <table>
-                <#list artist["albums"] as album>
-                    <tr>
-                        <td rowspan="2" style="width: 200px;">
-                            <a class="btn" data-toggle="collapse" data-target="#collapsedAlbum${album?index}" style="padding: 6px 0px;">
-                                <img src=<#if album["image"]??>${album["image"]}<#else>"/images/no_album_art.png"</#if> class="album-image">
-                            </a>
-                        </td>
-                        <td>
-                            <span>&nbsp;</span>
-                            <a href="${album["uri"]}">
-                                ${album["title"]}
-                            </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <span>&nbsp;</span>
-                            ${album["year"]?c}
-                        </td>
-                    </tr>
+                               <div class="no-text-overflow">
+                                   <br>
+                                   <a href="spotify:album:${album["id"]}">
+                                       ${album["title"]}
+                                   </a>
+                                   <br>
 
-                    <tr>
-                        <td colspan="2">
-                        <div id="collapsedAlbum${album?index}" aria-expanded="true" style="" class="panel panel-default collapse">
+                                   <span>${album["year"]?c}</span>
+                               </div>
 
-                            <ol class="list-group">
-                                <#list album["songs"] as song>
-                                    <a class="list-group-item" href="${song["uri"]}">
-                                        ${song["title"]} - ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
-                                    </a>
-                                </#list>
+                               <div id="collapsedAlbum${album?index}" aria-expanded="true" class="panel panel-default collapse">
 
-                            </ol>
-                        </div>
-                        </td>
-                    </tr>
-                </#list>
-                </table>
+                                   <ol class="list-group">
+                                       <#list album["songs"] as song>
+                                           <a class="list-group-item" href="spotify:track:${song["id"]}">
+                                               <small class="pull-left">
+                                                   ${song?index + 1}
+                                               </small>
+
+                                               ${song["title"]}
+
+                                               <small class="pull-right">
+                                                   ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
+                                               </small>
+                                           </a>
+                                       </#list>
+                                   </ol>
+                               </div>
+                           </div>
+                        </#list>
+                    </div>
+                    <br>
+                </#if>
+
 
             </#if>
         </div>

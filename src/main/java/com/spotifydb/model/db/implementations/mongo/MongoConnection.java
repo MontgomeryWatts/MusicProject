@@ -64,14 +64,14 @@ public class MongoConnection extends DatabaseConnection {
 
         Document embeddedAlbumDoc = (Document) doc.get("albums");
 
-        String albumUri = embeddedAlbumDoc.getString("uri");
+        String albumID = embeddedAlbumDoc.getString("id");
         String text = embeddedAlbumDoc.getString("title");
         String imageUrl = embeddedAlbumDoc.getString("image");
         if (imageUrl == null){
             imageUrl = BLANK_ALBUM;
         }
 
-        return new Preview(Preview.Type.ALBUM, artistId, albumUri, imageUrl, text);
+        return new Preview(Preview.Type.ALBUM, artistId, albumID, imageUrl, text);
     }
 
 
@@ -199,7 +199,7 @@ public class MongoConnection extends DatabaseConnection {
 
         aggregationStages.addAll(
                 Arrays.asList(
-                        project( include("albums.uri", "albums.image", "albums.title")),
+                        project( include("albums.id", "albums.image", "albums.title")),
                         facet(new Facet("total", count()),
                                 new Facet("paging", skip(offset), limit(limit)))
                 )
@@ -341,7 +341,7 @@ public class MongoConnection extends DatabaseConnection {
         for (Album album: albums) {
             int year = Integer.parseInt(album.getReleaseDate().substring(0, 4)); //Dates are in YYYY-MM-DD format
             Document albumDoc = new Document("title", album.getName())
-                    .append("uri", album.getUri())
+                    .append("id", album.getId())
                     .append("year", year);
 
 
@@ -366,7 +366,7 @@ public class MongoConnection extends DatabaseConnection {
             Document songDoc = new Document("title", track.getName())
                     .append("duration", track.getDurationMs() / 1000)
                     .append("explicit", track.getIsExplicit())
-                    .append("uri", track.getUri());
+                    .append("id", track.getId());
 
             Set<String> featured= getFeatured(artistId, track);
             if(!featured.isEmpty()) {
@@ -516,7 +516,7 @@ public class MongoConnection extends DatabaseConnection {
         //The driver won't let me make the _id field a document when using Aggregates.group
         //Have to make an ugly document like this to do what I want
         Document groupDoc = new Document("$group",
-                new Document ("_id", new Document("uri", "$albums.songs.uri")
+                new Document ("_id", new Document("id", "$albums.songs.id")
                         .append("title", "$albums.songs.title")
                         .append("image", "$albums.image")
                         .append("artist", "$name")

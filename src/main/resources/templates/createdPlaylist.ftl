@@ -15,8 +15,8 @@
                     <div id="playlistCarousel" class="carousel slide collapse in" data-ride="carousel" data-interval="false">
                         <div class="carousel-inner">
                         <#list songs as song>
-                            <div class="item <#if song["uri"]=songs?first["uri"]>active</#if>">
-                                <a href="${song["uri"]}">
+                            <div class="item <#if song["id"]=songs?first["id"]>active</#if>">
+                                <a href="spotify:track:${song["id"]}">
                                     <img class="img-responsive center-block" src="${song["image"]}" alt="Album Art">
                                 </a>
                                 <div class="carousel-caption playlist-caption transparent-background">
@@ -40,7 +40,7 @@
                     </a>
                     <ol class="list-group collapse" id="playlistAsList">
                     <#list songs as song>
-                                    <a class="list-group-item" href="${song["uri"]}">
+                                    <a class="list-group-item" href="spotify:track:${song["id"]}">
                                         ${song["title"]} - ${song["artist"]} &emsp;&emsp; ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
                                     </a>
                     </#list>

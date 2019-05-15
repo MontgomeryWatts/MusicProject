@@ -25,7 +25,7 @@ public class Preview {
                 // Both albums and songs have their external links stored, as there is currently no
                 // plans to have an internal route such as /albums or /songs
             case ALBUM:
-                this.externalLink = resourceId;
+                this.externalLink = "spotify:album:" + resourceId;
                 break;
             case SONG:
                 this.externalLink = resourceId;
