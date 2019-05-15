@@ -41,7 +41,7 @@
 
                                <div class="no-text-overflow">
                                    <br>
-                                   <a href="${album["uri"]}">
+                                   <a href="spotify:album:${album["id"]}">
                                        ${album["title"]}
                                    </a>
                                    <br>
@@ -53,7 +53,7 @@
 
                                    <ol class="list-group">
                                        <#list album["songs"] as song>
-                                           <a class="list-group-item" href="${song["uri"]}">
+                                           <a class="list-group-item" href="spotify:track:${song["id"]}">
                                                <small class="pull-left">
                                                    ${song?index + 1}
                                                </small>
