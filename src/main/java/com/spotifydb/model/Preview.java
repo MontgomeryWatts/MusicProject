@@ -13,24 +13,28 @@ public class Preview {
         SONG
     }
 
-    public Preview(Type type, String artistId, String resourceId, String imageUrl, String text){
-        this.internalLink = "/artists/" + artistId;
+    public Preview(Type type, String internalID, String externalID, String imageUrl, String text){
+
         this.imageUrl = imageUrl;
         this.text = text;
 
         switch (type){
             case ARTIST:
-                this.externalLink = "spotify:artist:" + resourceId;
+                this.internalLink = "/artists/" + internalID;
+                this.externalLink = "spotify:artist:" + externalID;
                 break;
                 // Both albums and songs have their external links stored, as there is currently no
                 // plans to have an internal route such as /albums or /songs
             case ALBUM:
-                this.externalLink = "spotify:album:" + resourceId;
+                this.internalLink = "/albums/" + internalID;
+                this.externalLink = "spotify:album:" + externalID;
                 break;
             case SONG:
-                this.externalLink = resourceId;
+                this.internalLink = "/albums/" + internalID;
+                this.externalLink = "spotify:track:" + externalID;
                 break;
             default:
+                this.internalLink = "/albums/0YrdQQiUYjNmLPs0SI53qy";
                 this.externalLink = "spotify:track:7m5ImlszwdzMxtkF8ldGzS";
                 break;
         }

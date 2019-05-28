@@ -14,6 +14,8 @@ import com.wrapper.spotify.model_objects.specification.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import com.spotifydb.ui.controllers.ArtistController;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -29,6 +31,8 @@ import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.lte;
 import static com.mongodb.client.model.Projections.*;
 
+@Service
+@Primary
 public class MongoConnection extends DatabaseConnection {
     private MongoCollection<Document> collection;
 
@@ -56,11 +60,10 @@ public class MongoConnection extends DatabaseConnection {
         String artistId = doc.getString("_id");
         String text = doc.getString("name");
 
-        return new Preview(Preview.Type.ARTIST, artistId, artistId, imageUrl, text);
+        return new Preview(Preview.Type.ARTIST,  artistId, artistId, imageUrl, text);
     }
 
     private static Preview createPreviewFromAlbumDoc(Document doc){
-        String artistId = doc.getString("_id");
 
         Document embeddedAlbumDoc = (Document) doc.get("albums");
 
@@ -71,7 +74,7 @@ public class MongoConnection extends DatabaseConnection {
             imageUrl = BLANK_ALBUM;
         }
 
-        return new Preview(Preview.Type.ALBUM, artistId, albumID, imageUrl, text);
+        return new Preview(Preview.Type.ALBUM, albumID, albumID, imageUrl, text);
     }
 
 
@@ -91,7 +94,7 @@ public class MongoConnection extends DatabaseConnection {
      */
 
     @Override
-    public String getRandomArtistUri(){
+    public String getRandomArtistId(){
         Document randomArtistDoc = collection.aggregate(Arrays.asList(
                 sample(1),
                 project(include("_id"))
@@ -144,8 +147,18 @@ public class MongoConnection extends DatabaseConnection {
      */
 
     @Override
-    public Document getArtistByUri(String artistUri) {
+    public Document getArtistById(String artistUri) {
         return collection.find( eq("_id", artistUri)).first();
+    }
+
+    @Override
+    public Document getAlbumPage(String albumID){
+        return collection.aggregate(
+                Arrays.asList(
+                        unwind("$albums"),
+                        match(eq("albums.id", albumID))
+                )
+        ).first();
     }
 
     private Bson createArtistMatchDoc(String genre, String name){

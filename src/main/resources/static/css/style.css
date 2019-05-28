@@ -13,7 +13,7 @@ input, select{
     color: black;
 }
 
-.artist-preview{
+.preview{
     height: 150px;
     width: 150px;
     vertical-align: middle;

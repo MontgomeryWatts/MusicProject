@@ -1,13 +1,13 @@
 package com.spotifydb.ui.controllers;
 
 import com.spotifydb.model.PreviewPage;
+import com.spotifydb.model.db.implementations.DatabaseConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import com.spotifydb.application.DatabaseService;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import static com.spotifydb.model.db.implementations.DatabaseConnection.RESULTS_PER_PAGE;
@@ -18,7 +18,7 @@ import static com.spotifydb.model.db.implementations.DatabaseConnection.RESULTS_
 public class SearchController {
 
     @Autowired
-    private DatabaseService service;
+    private DatabaseConnection db;
 
     @GetMapping("")
     public String searchGet(Model model, @RequestParam(required = false) String type,
@@ -34,10 +34,10 @@ public class SearchController {
             int offset = RESULTS_PER_PAGE * (page - 1);
             switch (type){
                 case "artist":
-                    previewPage = service.getArtists(genre, name, offset, RESULTS_PER_PAGE);
+                    previewPage = db.getArtists(genre, name, offset, RESULTS_PER_PAGE);
                     break;
                 case "album":
-                    previewPage = service.getAlbums(name, year, offset, RESULTS_PER_PAGE);
+                    previewPage = db.getAlbums(name, year, offset, RESULTS_PER_PAGE);
                 default:
                     break;
             }
