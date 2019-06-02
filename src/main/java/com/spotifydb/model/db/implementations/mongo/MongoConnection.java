@@ -193,23 +193,42 @@ public class MongoConnection extends DatabaseConnection {
         return null;
     }
 
-    private Bson createAlbumMatchDoc(String name, Integer year){
-        if (name != null  && name.length() > 0){
-            Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
-            Bson nameMatchDoc = regex("album.title", namePattern);
-            if (year != null){  //Name not null and genre not null
-                Bson yearMatchDoc = eq("album.year", year);
-                return match( and( yearMatchDoc, nameMatchDoc));
-            } else { //Name not null and genre null
-                return match(nameMatchDoc);
-            }
-        } else {
-            if (year != null) { //Name is null, genre is not null
-                Bson yearMatchDoc = eq("album.year", year);
-                return match(yearMatchDoc);
+    private Bson createAlbumYearMatchDoc(Integer year){
+        if (year!= null){
+            try{
+                Integer nextYear = year + 1;
+                SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
+                Date currentYearDate = yearFormat.parse(year.toString());
+                Date nextYearDate = yearFormat.parse(nextYear.toString());
+                return and(gte("album.release_date", currentYearDate),lt("album.release_date", nextYearDate));
+            } catch (ParseException pe) {
+                //Fall through
             }
         }
         return null;
+    }
+
+    private Bson createAlbumTitleMatchDoc(String title){
+        if (title != null  && title.length() > 0){
+            Pattern namePattern = Pattern.compile(title, Pattern.CASE_INSENSITIVE);
+            return regex("album.title", namePattern);
+        }
+        return null;
+    }
+
+    private Bson createAlbumMatchDoc(String title, Integer year){
+        Bson yearMatchDoc = createAlbumYearMatchDoc(year);
+        Bson nameMatchDoc = createAlbumTitleMatchDoc(title);
+
+        if (nameMatchDoc != null && yearMatchDoc != null ) {
+            return match(and(yearMatchDoc, nameMatchDoc));
+        } else if (yearMatchDoc != null) {
+            return match(yearMatchDoc);
+        } else if (nameMatchDoc != null) {
+            return match(nameMatchDoc);
+        } else {
+            return null;
+        }
     }
 
     @Override
