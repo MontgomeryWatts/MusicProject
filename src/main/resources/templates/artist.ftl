@@ -46,9 +46,6 @@
                                    </a>
                                    <br>
 
-                                   <#if album["release_date"]??>
-                                       <span>${album["release_date"]?date}</span>
-                                   </#if>
                                </div>
                            </div>
                         </#list>

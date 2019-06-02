@@ -15,14 +15,17 @@
                         <div class="media">
                             <img src="${album["image"]}" class="album-image pull-left">
 
-                            <h1>${album["title"]}</h1>
+                            <a href="spotify:album:${album["albumId"]}">
+                                <h1>${album["title"]}</h1>
+                            </a>
                             <p>By
                                 <#list artist["credits"] as credit>
                                     <a href="/artists/${credit["artistId"]}">
-                                        ${credit["name"]}<#sep>,
+                                        ${credit["name"]}<#if credit_has_next>, </#if>
                                     </a>
                                 </#list>
                             </p>
+                            <p>Released ${album["release_date"]?date}</p>
                         </div>
 
                         <br>
