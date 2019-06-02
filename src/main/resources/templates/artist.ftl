@@ -34,19 +34,21 @@
                         <#list artist["albums"] as album>
                            <div class="media col-md-3">
                                <div>
-                                   <a class="media-object" href="/albums/${album["id"]}">
+                                   <a class="media-object" href="/albums/${album["albumId"]}">
                                        <img src=<#if album["image"]??>${album["image"]}<#else>"/images/no_album_art.png"</#if> class="album-image">
                                    </a>
                                </div>
 
                                <div class="no-text-overflow">
                                    <br>
-                                   <a href="spotify:album:${album["id"]}">
+                                   <a href="spotify:album:${album["albumId"]}">
                                        ${album["title"]}
                                    </a>
                                    <br>
 
-                                   <span>${album["year"]?c}</span>
+                                   <#if album["release_date"]??>
+                                       <span>${album["release_date"]?date}</span>
+                                   </#if>
                                </div>
                            </div>
                         </#list>

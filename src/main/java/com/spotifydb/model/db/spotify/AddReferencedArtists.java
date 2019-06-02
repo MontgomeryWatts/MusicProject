@@ -15,13 +15,13 @@ public class AddReferencedArtists {
         DatabaseConnection db = new MongoConnection();
         SpotifyConnection sc = new SpotifyConnection();
 
-        Set<String> allFeaturedUris = db.getAllFeaturedArtists();
-        Set<String> artistUrisInDatabase = db.getAllArtistUris();
-        allFeaturedUris.removeAll(artistUrisInDatabase);
-        System.out.println("Attempting to insert " + allFeaturedUris.size() + " artists to the database.");
+        Set<String> allFeaturedIds = db.getAllFeaturedArtists();
+        Set<String> allArtistIds = db.getAllArtistIds();
+        allFeaturedIds.removeAll(allArtistIds);
+        System.out.println("Attempting to insert " + allFeaturedIds.size() + " artists to the database.");
         long numDocsAtStart = db.getNumArtists();
         long startTime = System.currentTimeMillis();
-        for(String id: allFeaturedUris) {
+        for(String id: allFeaturedIds) {
             Artist artist = sc.getArtistById(id);
             Album[] albums = sc.getAlbumsByArtist(artist);
             db.insertArtist(artist, albums);

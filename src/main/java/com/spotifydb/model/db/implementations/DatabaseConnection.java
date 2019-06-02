@@ -18,14 +18,14 @@ public abstract class DatabaseConnection {
     //Artist specific methods
     public abstract Document getArtistById(String artistId);
     public abstract String getRandomArtistId();
-    public abstract long getNumArtists();
+    public abstract int getNumArtists();
     public abstract Set<String> getAllFeaturedArtists();
-    public abstract Set<String> getAllArtistUris();
+    public abstract Set<String> getAllArtistIds();
     public abstract Iterable<String> getSimilarArtistNames(String name, int offset, int limit);
 
     public abstract PreviewPage getArtists(String genre, String name, int offset, int limit);
     public abstract PreviewPage getArtistsByRandom();
-    public abstract boolean insertArtist(Artist artist, Album[] albums);
+    public abstract void insertArtist(Artist artist, Album[] albums);
 
     public abstract Document getAlbumPage(String albumID);
     public abstract PreviewPage getAlbums(String name, Integer year, int offset, int limit);

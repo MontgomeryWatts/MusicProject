@@ -17,6 +17,8 @@ import com.spotifydb.ui.controllers.ArtistController;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -27,9 +29,9 @@ import static com.mongodb.client.model.Aggregates.limit;
 import static com.mongodb.client.model.Aggregates.match;
 import static com.mongodb.client.model.Aggregates.skip;
 import static com.mongodb.client.model.Filters.*;
-import static com.mongodb.client.model.Filters.gte;
-import static com.mongodb.client.model.Filters.lte;
 import static com.mongodb.client.model.Projections.*;
+import static com.mongodb.client.model.Sorts.ascending;
+import static com.mongodb.client.model.Sorts.descending;
 
 @Service
 @Primary
@@ -57,7 +59,7 @@ public class MongoConnection extends DatabaseConnection {
     private static Preview createPreviewFromArtistDoc(Document doc){
         List<String> imageUrls = (ArrayList<String>) doc.get("images");
         String imageUrl = (imageUrls.size() != 0) ? imageUrls.get(0) : BLANK_PROFILE;
-        String artistId = doc.getString("_id");
+        String artistId = doc.getString("artistId");
         String text = doc.getString("name");
 
         return new Preview(Preview.Type.ARTIST,  artistId, artistId, imageUrl, text);
@@ -65,9 +67,9 @@ public class MongoConnection extends DatabaseConnection {
 
     private static Preview createPreviewFromAlbumDoc(Document doc){
 
-        Document embeddedAlbumDoc = (Document) doc.get("albums");
+        Document embeddedAlbumDoc = (Document) doc.get("album");
 
-        String albumID = embeddedAlbumDoc.getString("id");
+        String albumID = embeddedAlbumDoc.getString("albumId");
         String text = embeddedAlbumDoc.getString("title");
         String imageUrl = embeddedAlbumDoc.getString("image");
         if (imageUrl == null){
@@ -84,9 +86,14 @@ public class MongoConnection extends DatabaseConnection {
      * @return The number of artists stored in the database.
      */
     @Override
-    public long getNumArtists(){
-        return collection.count();
-    }
+    public int getNumArtists(){
+        Document aggregate = collection.aggregate(Arrays.asList(
+                group("$artistId", new ArrayList<>()), //There are no accumulators
+                count("totalArtists")
+        )).first();
+
+        return aggregate != null ? aggregate.getInteger("totalArtists") : 0;
+}
 
     /**
      * Retrieves the URI of a random artist. This is used for a redirect in {@link ArtistController#getRandom()}
@@ -97,9 +104,9 @@ public class MongoConnection extends DatabaseConnection {
     public String getRandomArtistId(){
         Document randomArtistDoc = collection.aggregate(Arrays.asList(
                 sample(1),
-                project(include("_id"))
+                project(include("artistId"))
         )).first();
-        return randomArtistDoc.getString("_id");
+        return randomArtistDoc.getString("artistId");
     }
 
     /**
@@ -109,7 +116,7 @@ public class MongoConnection extends DatabaseConnection {
      */
     @Override
     public Set<String> getAllFeaturedArtists(){
-        return collection.distinct("albums.songs.featured", String.class).into(new HashSet<>());
+        return collection.distinct("album.songs.featured", String.class).into(new HashSet<>());
     }
 
     /**
@@ -119,8 +126,8 @@ public class MongoConnection extends DatabaseConnection {
      */
 
     @Override
-    public Set<String> getAllArtistUris(){
-        return collection.distinct("_id", String.class).into(new HashSet<>());
+    public Set<String> getAllArtistIds(){
+        return collection.distinct("artistId", String.class).into(new HashSet<>());
     }
 
 
@@ -133,7 +140,7 @@ public class MongoConnection extends DatabaseConnection {
         PreviewPage page = new PreviewPage();
         List<Preview> previews = collection.aggregate(Arrays.asList(
                 sample(RESULTS_PER_PAGE),
-                project(include("images", "name"))
+                project(include("images", "name", "artistId"))
         )).map( MongoConnection::createPreviewFromArtistDoc ).into(new ArrayList<>());
 
         page.setPreviews(previews);
@@ -141,24 +148,32 @@ public class MongoConnection extends DatabaseConnection {
     }
 
     /**
-     * Retrieves an artist's Document or null if no document exists
-     * @param artistUri The URI of the artist to retrieve
+     * Retrieves an artist's Document or null if no document exists. Used to display an artist page
+     * @param artistId The id of the artist to retrieve
      * @return The matching document, or null
      */
 
     @Override
-    public Document getArtistById(String artistUri) {
-        return collection.find( eq("_id", artistUri)).first();
+    public Document getArtistById(String artistId) {
+        return collection.aggregate(Arrays.asList(
+                match(eq("artistId", artistId)),
+                sort(descending("album.release_date")),
+                group("$artistId",
+                        first("name", "$name"),
+                        first("genres", "$genres"),
+                        first("images", "$images"),
+                        push("albums", "$album"))
+        )).first();
     }
 
     @Override
     public Document getAlbumPage(String albumID){
-        return collection.aggregate(
-                Arrays.asList(
-                        unwind("$albums"),
-                        match(eq("albums.id", albumID))
-                )
-        ).first();
+        return collection.aggregate(Arrays.asList(
+           match(eq("album.albumId", albumID)),
+           group(null,
+                   first("album", "$album"),
+                   push("credits", new Document("name", "$name").append("artistId", "$artistId"))
+        ))).first();
     }
 
     private Bson createArtistMatchDoc(String genre, String name){
@@ -183,16 +198,16 @@ public class MongoConnection extends DatabaseConnection {
     private Bson createAlbumMatchDoc(String name, Integer year){
         if (name != null  && name.length() > 0){
             Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
-            Bson nameMatchDoc = regex("albums.title", namePattern);
+            Bson nameMatchDoc = regex("album.title", namePattern);
             if (year != null){  //Name not null and genre not null
-                Bson yearMatchDoc = eq("albums.year", year);
+                Bson yearMatchDoc = eq("album.year", year);
                 return match( and( yearMatchDoc, nameMatchDoc));
             } else { //Name not null and genre null
                 return match(nameMatchDoc);
             }
         } else {
             if (year != null) { //Name is null, genre is not null
-                Bson yearMatchDoc = eq("albums.year", year);
+                Bson yearMatchDoc = eq("album.year", year);
                 return match(yearMatchDoc);
             }
         }
@@ -203,8 +218,6 @@ public class MongoConnection extends DatabaseConnection {
     public PreviewPage getAlbums(String name, Integer year, int offset, int limit){
         List<Bson> aggregationStages = new ArrayList<>();
 
-        aggregationStages.add( unwind("$albums") );
-
         Bson albumMatcher = createAlbumMatchDoc(name, year);
         if (albumMatcher != null) {
             aggregationStages.add(albumMatcher);
@@ -212,7 +225,7 @@ public class MongoConnection extends DatabaseConnection {
 
         aggregationStages.addAll(
                 Arrays.asList(
-                        project( include("albums.id", "albums.image", "albums.title")),
+                        group("$album.albumId", first("album", "$album")),
                         facet(new Facet("total", count()),
                                 new Facet("paging", skip(offset), limit(limit)))
                 )
@@ -256,7 +269,10 @@ public class MongoConnection extends DatabaseConnection {
 
         aggregationStages.addAll(
                 Arrays.asList(
-                        project( include("images", "name")),
+                        group("$artistId",
+                                first("images", "$images"),
+                                first("name", "$name"),
+                                first("artistId", "$artistId")),
                         facet(new Facet("total", count()),
                             new Facet("paging", skip(offset), limit(limit)))
                 )
@@ -295,6 +311,7 @@ public class MongoConnection extends DatabaseConnection {
         Pattern namePattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
         return  collection.aggregate(
                 Arrays.asList(
+                        group("$artistId", first("name", "$name")),  //Look into making this faster
                         match(Filters.regex("name", namePattern)),
                         project(include("name")),
                         skip(offset),
@@ -308,32 +325,30 @@ public class MongoConnection extends DatabaseConnection {
      */
 
     @Override
-    public boolean insertArtist(Artist artist, Album[] albums) {
+    public void insertArtist(Artist artist, Album[] albums) {
         if(albums.length == 0) //Only add artists with music, only implemented because storage costs money!
-            return false;
+            return;
 
-        Document artistDoc = createArtistDoc(artist, albums);
-
-        if(artistDoc != null) {
-            try {
-                collection.insertOne(artistDoc);
-                return true;
-            } catch (MongoWriteException mwe) {
-                mwe.printStackTrace();
-            }
+        List<Document> artistDocs = new ArrayList<>();
+        for(Album album: albums){
+             artistDocs.add(createArtistDoc(artist, album));
         }
-        return false;
+
+        try {
+            collection.insertMany(artistDocs);
+        } catch (MongoWriteException mwe) {
+            mwe.printStackTrace();
+        }
     }
 
-    private Document createArtistDoc(Artist artist, Album[] albums){
+    private Document createArtistDoc(Artist artist, Album album){
         String id = artist.getId();
         List<String> genres = Arrays.asList(artist.getGenres());
         List<String> imageUrls = new ArrayList<>();
-        Image[] images = artist.getImages();
-        for(Image image: images)
+        for(Image image: artist.getImages())
             imageUrls.add(image.getUrl());
 
-        Document artistDoc = new Document("_id", id)
+        Document artistDoc = new Document("artistId", id)
                 .append("name", artist.getName())
                 .append("images", imageUrls);
 
@@ -341,33 +356,48 @@ public class MongoConnection extends DatabaseConnection {
             artistDoc.append("genres", genres);
         }
 
-        if(albums.length != 0) {
-            List<Document> albumDocs = createAlbumDocuments(id, albums);
-            artistDoc.append("albums", albumDocs);
-        }
+        artistDoc.append("album", createAlbumDocument(id, album));
 
         return artistDoc;
     }
 
-    private List<Document> createAlbumDocuments(String artistId, Album[] albums){
-        List<Document> albumDocuments = new ArrayList<>();
-        for (Album album: albums) {
-            int year = Integer.parseInt(album.getReleaseDate().substring(0, 4)); //Dates are in YYYY-MM-DD format
-            Document albumDoc = new Document("title", album.getName())
-                    .append("id", album.getId())
-                    .append("year", year);
-
-
-            Image[] albumImages = album.getImages();
-            if(albumImages.length != 0) {
-                albumDoc.append("image", albumImages[0].getUrl()); //The first image in the images array is the largest
+    private Date parseAlbumDate(Album album){
+        String releaseDate = album.getReleaseDate();
+        SimpleDateFormat dateFormat;
+        try{
+            switch (album.getReleaseDatePrecision()){
+                case DAY:
+                    dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    break;
+                case MONTH:
+                    dateFormat = new SimpleDateFormat("yyyy-MM");
+                    break;
+                case YEAR:
+                default:
+                    dateFormat = new SimpleDateFormat("yyyy");
+                    break;
             }
-
-            List<Document> songDocuments = createSongDocuments(artistId, album);
-            albumDoc.append("songs", songDocuments);
-            albumDocuments.add(albumDoc);
+            return dateFormat.parse(releaseDate);
+        } catch (ParseException pe) {
+            //should never happen
+            return new Date();
         }
-        return albumDocuments;
+    }
+
+    private Document createAlbumDocument(String artistId, Album album){
+        Document albumDoc = new Document("title", album.getName())
+                .append("albumId", album.getId())
+                .append("release_date", parseAlbumDate(album));
+
+        Image[] albumImages = album.getImages();
+        if(albumImages.length != 0) {
+            albumDoc.append("image", albumImages[0].getUrl()); //The first image in the images array is the largest
+        }
+
+        List<Document> songDocuments = createSongDocuments(artistId, album);
+        albumDoc.append("songs", songDocuments);
+
+        return albumDoc;
     }
 
 
@@ -376,10 +406,10 @@ public class MongoConnection extends DatabaseConnection {
 
         TrackSimplified[] tracks = album.getTracks().getItems();
         for(TrackSimplified track: tracks){
-            Document songDoc = new Document("title", track.getName())
+            Document songDoc = new Document("trackId", track.getId())
+                    .append("title", track.getName())
                     .append("duration", track.getDurationMs() / 1000)
-                    .append("explicit", track.getIsExplicit())
-                    .append("id", track.getId());
+                    .append("explicit", track.getIsExplicit());
 
             Set<String> featured= getFeatured(artistId, track);
             if(!featured.isEmpty()) {
@@ -430,7 +460,7 @@ public class MongoConnection extends DatabaseConnection {
                 unwind("$genres"),
                 match(Filters.regex("genres", pattern, "i" )),
                 group("$genres", new ArrayList<>()),
-                sort(Sorts.ascending("_id")),
+                sort(ascending("_id")),
                 group(0, push("genres", "$_id"))
         )).first();
 
@@ -463,9 +493,8 @@ public class MongoConnection extends DatabaseConnection {
     public int getNumberOfSongs() {
         Document songsDoc = collection.aggregate(
                 Arrays.asList(
-                        unwind("$albums"),
                         project(computed("numSongs",
-                                new Document("$size", "$albums.songs"))
+                                new Document("$size", "$album.songs"))
                         ),
                         group(null, sum("totalSongs", "$numSongs"))
                 )
@@ -482,10 +511,9 @@ public class MongoConnection extends DatabaseConnection {
     public int getTotalDuration() {
         Document songsDoc = collection.aggregate(
                 Arrays.asList(
-                        unwind("$albums"),
-                        unwind("$albums.songs"),
-                        replaceRoot("$albums.songs"),
-                        group(null, sum("duration", "$duration"))
+                        unwind("$album.songs"),
+                        project(include("album.songs.duration")),
+                        group(null, sum("duration", "$album.songs.duration"))
                 )
         ).first();
 
@@ -509,38 +537,27 @@ public class MongoConnection extends DatabaseConnection {
         //If the user provided artist or genre criteria
         if(artists.size() + genres.size() != 0) {
             aggregatePipeline.add(match(or(in("genres", genres), in("name", artists))));
-        }
-        else{
+        } else{
             aggregatePipeline.add(sample(RESULTS_PER_PAGE * 10)); //No artist or genre criteria, sample random artists
         }
 
-        aggregatePipeline.addAll(
-                Arrays.asList(
-                        unwind("$albums"),
-                        match(and( gte("albums.year", startYear), lte("albums.year", endYear))),
-                        unwind("$albums.songs")
-                )
-        );
+        //TODO re-add ability to filter songs by release date
+        //important to remember that an int is no longer used to represent this info
+        //match(and( gte("albums.year", startYear), lte("albums.year", endYear)))
+        aggregatePipeline.add(unwind("$album.songs"));
+
 
         if (!allowExplicit){
-            aggregatePipeline.add(match(eq("albums.songs.explicit", allowExplicit)));
+            aggregatePipeline.add(match(eq("album.songs.explicit", allowExplicit)));
         }
 
-        //The driver won't let me make the _id field a document when using Aggregates.group
-        //Have to make an ugly document like this to do what I want
-        Document groupDoc = new Document("$group",
-                new Document ("_id", new Document("id", "$albums.songs.id")
-                        .append("title", "$albums.songs.title")
-                        .append("image", "$albums.image")
-                        .append("artist", "$name")
-                        .append("duration", "$albums.songs.duration")) );
-
-        aggregatePipeline.addAll(
-                Arrays.asList(
-                        groupDoc,
-                        replaceRoot("$_id")
-                )
-        );
+        aggregatePipeline.add(
+                group("$album.songs.trackId",
+                    first("duration", "$album.songs.duration"),
+                    first("title", "$album.songs.title"),
+                    first("artist", "$name"),
+                    first("image", "$album.image")
+                ));
 
         return collection.aggregate(aggregatePipeline).into( new ArrayList<>());
     }
