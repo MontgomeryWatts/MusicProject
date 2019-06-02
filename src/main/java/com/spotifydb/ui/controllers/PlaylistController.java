@@ -1,5 +1,6 @@
 package com.spotifydb.ui.controllers;
 
+import com.spotifydb.model.db.implementations.DatabaseConnection;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import com.spotifydb.application.DatabaseService;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,7 +19,7 @@ import java.util.Set;
 @RequestMapping("/playlist")
 public class PlaylistController {
     @Autowired
-    private DatabaseService service;
+    private DatabaseConnection db;
 
     @GetMapping("")
     public String playlist(){
@@ -27,7 +27,7 @@ public class PlaylistController {
     }
 
     @PostMapping("")
-    public String artistsSearchPost(Model model, @RequestParam String artist_input, @RequestParam String genre_input,
+    public String playlistPost(Model model, @RequestParam String artist_input, @RequestParam String genre_input,
                                     @RequestParam(defaultValue = "2") String hour_input, @RequestParam(defaultValue = "0") String minute_input,
                                     @RequestParam(required = false) String explicit_input){
 
@@ -43,7 +43,9 @@ public class PlaylistController {
 
         int duration = Integer.parseInt(hour_input) * 3600 + Integer.parseInt(minute_input) * 60;
 
-        List<Document> songs = service.createPlaylist(artists, genres, duration, allowExplicit, 2000, 2020);
+        List<Document> songs = db.getSongsByCriteria(artists, genres, allowExplicit, 2000, 2020);
+        songs = db.createPlaylist(songs, duration);
+
         model.addAttribute("songs", songs);
         return "createdPlaylist";
     }

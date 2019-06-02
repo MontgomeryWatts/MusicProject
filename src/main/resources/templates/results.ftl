@@ -19,7 +19,7 @@
                                     <div class="col-xs-10 col-xs-offset-1 col-md-offset-2 col-md-4 no-text-overflow">
                                     </#if>
                                         <a href="${result.internalLink}">
-                                            <img src="${result.imageUrl}" class="artist-preview">
+                                            <img src="${result.imageUrl}" class="preview">
                                         </a>
                                         <span>&nbsp;</span>
                                         <a href="${result.externalLink}">

@@ -12,7 +12,7 @@
                 <div class="row text-center">
                     <a href="spotify:artist:${artist["_id"]}">
                         <h1>${artist["name"]}</h1>
-                        <img src=<#if artist["images"]?has_content>${artist["images"][1]}<#else>"/images/blank_profile_pic.png"</#if> class="artist-preview">
+                        <img src=<#if artist["images"]?has_content>${artist["images"][1]}<#else>"/images/blank_profile_pic.png"</#if> class="preview">
                     </a>
                 </div>
 
@@ -34,38 +34,21 @@
                         <#list artist["albums"] as album>
                            <div class="media col-md-3">
                                <div>
-                                   <a class="btn media-object" data-toggle="collapse" data-target="#collapsedAlbum${album?index}">
+                                   <a class="media-object" href="/albums/${album["albumId"]}">
                                        <img src=<#if album["image"]??>${album["image"]}<#else>"/images/no_album_art.png"</#if> class="album-image">
                                    </a>
                                </div>
 
                                <div class="no-text-overflow">
                                    <br>
-                                   <a href="spotify:album:${album["id"]}">
+                                   <a href="spotify:album:${album["albumId"]}">
                                        ${album["title"]}
                                    </a>
                                    <br>
 
-                                   <span>${album["year"]?c}</span>
-                               </div>
-
-                               <div id="collapsedAlbum${album?index}" aria-expanded="true" class="panel panel-default collapse">
-
-                                   <ol class="list-group">
-                                       <#list album["songs"] as song>
-                                           <a class="list-group-item" href="spotify:track:${song["id"]}">
-                                               <small class="pull-left">
-                                                   ${song?index + 1}
-                                               </small>
-
-                                               ${song["title"]}
-
-                                               <small class="pull-right">
-                                                   ${(song["duration"]/60)?int}:<#if (song["duration"]%60)?int < 10>0</#if>${song["duration"]%60}
-                                               </small>
-                                           </a>
-                                       </#list>
-                                   </ol>
+                                   <#if album["release_date"]??>
+                                       <span>${album["release_date"]?date}</span>
+                                   </#if>
                                </div>
                            </div>
                         </#list>
