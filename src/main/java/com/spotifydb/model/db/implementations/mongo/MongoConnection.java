@@ -67,11 +67,9 @@ public class MongoConnection extends DatabaseConnection {
 
     private static Preview createPreviewFromAlbumDoc(Document doc){
 
-        Document embeddedAlbumDoc = (Document) doc.get("album");
-
-        String albumID = embeddedAlbumDoc.getString("albumId");
-        String text = embeddedAlbumDoc.getString("title");
-        String imageUrl = embeddedAlbumDoc.getString("image");
+        String albumID = doc.getString("_id");
+        String text = doc.getString("title");
+        String imageUrl = doc.getString("image");
         if (imageUrl == null){
             imageUrl = BLANK_ALBUM;
         }
@@ -225,7 +223,9 @@ public class MongoConnection extends DatabaseConnection {
 
         aggregationStages.addAll(
                 Arrays.asList(
-                        group("$album.albumId", first("album", "$album")),
+                        group("$album.albumId",
+                            first("image", "$album.image"),
+                            first("title", "$album.title")),
                         facet(new Facet("total", count()),
                                 new Facet("paging", skip(offset), limit(limit)))
                 )
